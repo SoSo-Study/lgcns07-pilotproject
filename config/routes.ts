@@ -7,6 +7,7 @@ export const routes = {
   studyWrite: "/studies/write",
   studyEdit: (studyId: number | string) => `/studies/write?studyId=${studyId}`,
   myStudies: "/my-studies",
+  uiKit: "/ui-kit", // 🧩 부품 모음 (팀원용 견본)
   applicants: "/applicants",
   login: "/login",
   signup: "/signup",

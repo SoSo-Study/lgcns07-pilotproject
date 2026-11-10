@@ -4,6 +4,7 @@ Closes #
 
 ## 어떻게 확인했나요
 
+- [ ] PR 받는 쪽(base)이 `dev`
 - [ ] `pnpm build` 통과
 - [ ] 화면에서 직접 눌러 봄
 
