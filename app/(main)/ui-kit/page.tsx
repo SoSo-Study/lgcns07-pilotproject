@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import { Plus } from "lucide-react";
+import { CircleDot, Clock, Plus } from "lucide-react";
 import { CategoryLabel } from "@/components/atoms/category-label";
+import { Pill } from "@/components/atoms/pill";
 import { StatusBadge } from "@/components/atoms/status-badge";
 import { TechTag } from "@/components/atoms/tech-tag";
 import { CategoryChip } from "@/components/molecules/category-chip";
@@ -58,6 +59,23 @@ export default function UiKitPage() {
         {categories.map((category) => (
           <CategoryLabel key={category} category={category} />
         ))}
+      </Sample>
+
+      <Sample
+        title="Pill (atoms/pill) — 글자 · 색 · 아이콘을 props로. 새 뱃지가 필요하면 이걸로"
+        code={`<Pill tone="success" icon={CircleDot} outlined>모집 중</Pill> · <Pill tone="accent">React</Pill> · <Pill>D-3</Pill>`}
+      >
+        <Pill>neutral</Pill>
+        <Pill tone="success">success</Pill>
+        <Pill tone="done">done</Pill>
+        <Pill tone="accent">accent</Pill>
+        <Pill tone="danger">danger</Pill>
+        <Pill tone="success" icon={CircleDot} outlined>
+          모집 중
+        </Pill>
+        <Pill tone="neutral" icon={Clock} outlined>
+          신청 대기
+        </Pill>
       </Sample>
 
       <Sample
