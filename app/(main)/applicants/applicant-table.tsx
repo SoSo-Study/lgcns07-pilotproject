@@ -1,4 +1,5 @@
 import { Check, X } from "lucide-react";
+import { decideApplicationAction } from "@/actions/application-actions";
 import { Button } from "@/components/ui/button";
 import type { Application } from "@/types/study";
 
@@ -63,7 +64,10 @@ export function ApplicantTable({ applications }: ApplicantTableProps) {
                 {formatDate(application.createdAt)}
               </td>
               <td className="px-4 py-3">
-                <StatusCell status={application.status} />
+                <StatusCell
+                  applicationId={application.applicationId}
+                  status={application.status}
+                />
               </td>
             </tr>
           ))}
@@ -74,8 +78,10 @@ export function ApplicantTable({ applications }: ApplicantTableProps) {
 }
 
 // 대기 중이면 승인 · 거절 버튼, 처리가 끝났으면 결과 글자
-// (버튼 동작은 2단계에서 서버 액션으로 붙여요)
-function StatusCell({ status }: { status: Application["status"] }) {
+function StatusCell({
+  applicationId,
+  status,
+}: Pick<Application, "applicationId" | "status">) {
   if (status === "APPROVED") {
     return (
       <span className="flex items-center gap-1 text-xs text-status-open">
@@ -94,12 +100,23 @@ function StatusCell({ status }: { status: Application["status"] }) {
     );
   }
 
+  // 버튼을 누르면 폼이 서버 액션(decideApplicationAction)으로 보내져요
+  // 어떤 신청인지(applicationId)는 숨은 칸으로, 승인/거절(decision)은 누른 버튼의 값으로
   return (
-    <span className="flex gap-2">
-      <Button size="sm">승인</Button>
-      <Button size="sm" variant="outline">
+    <form action={decideApplicationAction} className="flex gap-2">
+      <input type="hidden" name="applicationId" value={applicationId} />
+      <Button type="submit" name="decision" value="APPROVED" size="sm">
+        승인
+      </Button>
+      <Button
+        type="submit"
+        name="decision"
+        value="REJECTED"
+        size="sm"
+        variant="outline"
+      >
         거절
       </Button>
-    </span>
+    </form>
   );
 }

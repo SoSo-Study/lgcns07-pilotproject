@@ -2,9 +2,9 @@ import { Suspense } from "react";
 import { ApplicantStats } from "./applicant-stats";
 import { ApplicantTable } from "./applicant-table";
 import { StudySelect } from "./study-select";
+import { getApplicationsAction } from "@/actions/application-actions";
 import { PageHeader } from "@/components/templates/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { mockApplications } from "@/lib/mock-applications";
 import { mockStudies } from "@/lib/mock-studies";
 
 // 피그마 ④ 신청자 관리 — 담당: 이슈 #10
@@ -23,6 +23,7 @@ export default function ApplicantsPage({
 }
 
 // 🧪 로그인이 붙기 전까지 "내 스터디" 대신 가짜 스터디 전체를 써요
+// TODO(API 연결 후): 스터디 정보도 API에서 받기 — 승인하면 서버가 인원을 올려 줘서 숫자가 맞게 돼요
 const myStudies = mockStudies;
 const DEFAULT_STUDY_ID = 2; // 🧪 주소에 studyId가 없을 때 처음 보여 줄 스터디
 
@@ -36,10 +37,9 @@ async function Applicants({
     typeof studyId === "string" ? Number(studyId) : DEFAULT_STUDY_ID;
   const study = myStudies.find((item) => item.studyId === selectedId);
 
-  // 이 스터디에 들어온 신청만 골라요 (API가 붙으면 service가 대신 해 줘요)
-  const applications = mockApplications.filter(
-    (application) => application.studyId === selectedId,
-  );
+  // 이 스터디에 들어온 신청 목록 (화면 → actions → service)
+  const result = await getApplicationsAction(selectedId);
+  const applications = result.success ? result.data : [];
 
   return (
     <>
