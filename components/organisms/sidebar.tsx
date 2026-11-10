@@ -16,7 +16,7 @@ export function Sidebar() {
         <span className="flex flex-col">
           <span className="font-mono text-sm font-bold">soso.study</span>
           <span className="text-xs text-muted-foreground">
-            모여서 각자 스터디
+            함께 커밋하는 스터디
           </span>
         </span>
       </Link>

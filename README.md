@@ -1,6 +1,6 @@
 # 소소스터디 (soso.study)
 
-> 모여서 각자 스터디 — 개발자 스터디 모집 웹앱 · LG CNS AM 7기 파일럿 프로젝트 2조
+> 함께 커밋하는 스터디 — 개발자 스터디 모집 웹앱 · LG CNS AM 7기 파일럿 프로젝트 2조
 
 - 🎨 디자인(피그마): https://www.figma.com/design/W0olDz5eBBwsQpSFrFRmE0
 - 🌿 브랜치: 내 브랜치 → `dev` → `main` (4절)
