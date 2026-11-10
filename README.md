@@ -3,6 +3,7 @@
 > 모여서 각자 스터디 — 개발자 스터디 모집 웹앱 · LG CNS AM 7기 파일럿 프로젝트 2조
 
 - 🎨 디자인(피그마): https://www.figma.com/design/W0olDz5eBBwsQpSFrFRmE0
+- 🌿 브랜치: 내 브랜치 → `dev` → `main` (4절)
 - 📋 할 일 보드: https://github.com/orgs/SoSo-Study/projects/1
 
 ## 1. 처음 받았을 때 (한 번만)
@@ -88,18 +89,29 @@ page.tsx  →  actions/  →  service/  →  강사님 Spring API
 - 피그마 버튼 → 코드: primary = `<Button>` · default = `<Button variant="outline">` · danger = `<Button variant="destructive">`
 - 견본에 없는 공통 부품이 필요하면 **만들기 전에 팀에 먼저 물어보기**
 
-## 4. Git 흐름
+## 4. Git 흐름 — 내 브랜치 → dev → main
+
+```
+feat/5-study-list ─PR(Squash)─▶ dev ─PR(Merge, 리더)─▶ main (발표 · 배포용 완성본)
+```
+
+| 브랜치 | 역할 | 합치는 방법 |
+|---|---|---|
+| `dev` (기본 브랜치) | 매일 모으는 곳. 모든 PR은 여기로 | **Squash and merge** (승인 1명) |
+| `main` | 확인을 마친 완성본 (배포 · 발표) | 리더가 dev → main PR을 **Create a merge commit**으로 (승인 1명) |
 
 1. 보드에서 내 이슈 고르기 → 이슈 오른쪽 **Assignees → assign yourself**
-2. 최신 main 받기: `git switch main` → `git pull`
+2. 최신 dev 받기: `git switch dev` → `git pull`
 3. 브랜치 만들기: `git switch -c feat/5-study-list` (소문자-하이픈, `feat/` · `fix/` · `style/`로 시작)
 4. 작업 → 커밋 (커밋할 때 자동 검사가 돌아요: ESLint + Prettier)
 5. 올리기 전에 `pnpm build` 통과 확인 → `git push -u origin 브랜치이름`
-6. GitHub에서 PR 만들기 — 제목은 `feat: 스터디 목록 표` 처럼, 설명 맨 위에 `Closes #5`
-7. 리뷰 1명 승인 + Vercel 미리보기 확인 → 리더가 **Squash and merge**
-8. 합쳐지면: `git switch main` → `git pull` → 다음 브랜치
+6. GitHub에서 PR 만들기 — **받는 쪽(base)이 `dev`인지 확인**, 제목은 `feat: 스터디 목록 표` 처럼, 설명 맨 위에 `Closes #5`
+7. 리뷰 1명 승인 + 미리보기 확인 → 리더가 **Squash and merge**
+8. 합쳐지면: `git switch dev` → `git pull` → 다음 브랜치
 
-- main에는 직접 push 못 해요(보호 규칙). 하던 작업이 있는데 main을 받아야 하면 `git stash` → `git pull` → `git stash pop`
+- dev · main에는 직접 push 못 해요(보호 규칙). 하던 작업이 있는데 dev를 받아야 하면 `git stash` → `git pull` → `git stash pop`
+- 처음에 main으로 clone했다면 한 번만: `git fetch` → `git switch dev`
+- dev → main은 리더만, **Merge commit**으로 (Squash로 합치면 다음번 dev → main에서 충돌이 나요)
 
 ## 5. 🔒 보안
 
