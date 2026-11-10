@@ -1,44 +1,39 @@
+import type { ComponentProps } from "react";
 import { CircleCheck, CircleDot } from "lucide-react";
+import { Pill } from "@/components/atoms/pill";
 import type { StudyStatus } from "@/types/study";
-import { cn } from "@/lib/utils";
 
-const statusStyle: Record<
+// 스터디 상태 → Pill 글자·색·아이콘
+const statusPill = {
+  OPEN: { label: "모집 중", tone: "success", icon: CircleDot },
+  CLOSED: { label: "마감", tone: "done", icon: CircleCheck },
+} as const satisfies Record<
   StudyStatus,
-  { label: string; className: string; Icon: typeof CircleDot }
-> = {
-  OPEN: {
-    label: "모집 중",
-    className: "border-status-open bg-status-open-subtle text-status-open",
-    Icon: CircleDot,
-  },
-  CLOSED: {
-    label: "마감",
-    className:
-      "border-status-closed bg-status-closed-subtle text-status-closed",
-    Icon: CircleCheck,
-  },
-};
+  Pick<ComponentProps<typeof Pill>, "tone" | "icon"> & { label: string }
+>;
 
-type StatusBadgeProps = {
+type StatusBadgeProps = Omit<
+  ComponentProps<typeof Pill>,
+  "tone" | "icon" | "children"
+> & {
+  /** 스터디 상태 (OPEN = 모집 중, CLOSED = 마감) */
   status: StudyStatus;
-  className?: string;
 };
 
-// 피그마 StatusBadge — 모집 중(초록) / 마감(보라)
-// 사용: <StatusBadge status={study.status} />
-export function StatusBadge({ status, className }: StatusBadgeProps) {
-  const { label, className: color, Icon } = statusStyle[status];
+/**
+ * 피그마 StatusBadge — 스터디 모집 상태 (모집 중: 초록 / 마감: 보라).
+ * 스터디 상태 전용 지름길이에요. 다른 글자가 필요하면 `Pill`을 바로 쓰세요.
+ *
+ * @example
+ * <StatusBadge status={study.status} />
+ * <Pill tone="success" outlined>신청 대기</Pill> // 다른 글자는 Pill로
+ */
+export function StatusBadge({ status, ...props }: StatusBadgeProps) {
+  const { label, tone, icon } = statusPill[status];
 
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap",
-        color,
-        className,
-      )}
-    >
-      <Icon className="size-3" aria-hidden />
+    <Pill tone={tone} icon={icon} outlined {...props}>
       {label}
-    </span>
+    </Pill>
   );
 }

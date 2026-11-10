@@ -1,7 +1,10 @@
+import { Suspense } from "react";
+import { loadStudyList } from "@/actions/study-actions";
+import { StudyTable } from "@/components/organisms/study-table";
+import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/templates/page-header";
-import { TodoBox } from "@/components/templates/todo-box";
 import { buttonVariants } from "@/components/ui/button";
 import { routes } from "@/config/routes";
 
@@ -19,10 +22,32 @@ export default function StudiesPage() {
           </Link>
         }
       />
-      <TodoBox issue={5}>
-        스터디 목록 표가 들어갈 자리예요. 가짜 데이터는{" "}
-        <code className="font-mono">lib/mock-studies.ts</code>에 있어요.
-      </TodoBox>
+      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+        <StudyList />
+      </Suspense>
     </section>
+  );
+}
+async function StudyList() {
+  const result = await loadStudyList();
+
+  if (!result.success) {
+    return (
+      <p role="alert" className="text-sm text-destructive">
+        {result.message}
+      </p>
+    );
+  }
+  const studies = result.data.studies;
+  const openCount = studies.filter((study) => study.status === "OPEN").length;
+  const closedCount = studies.filter(
+    (study) => study.status === "CLOSED",
+  ).length;
+  return (
+    <StudyTable
+      studies={studies}
+      openCount={openCount}
+      closedCount={closedCount}
+    />
   );
 }
