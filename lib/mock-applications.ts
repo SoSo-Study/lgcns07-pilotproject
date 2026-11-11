@@ -61,6 +61,7 @@ export const mockApplications: Application[] = [
     createdAt: "2026-11-10T08:00:00",
   },
   // 🧪 자리가 다 찬 스터디(5번, 5/5)에 들어온 신청 — [승인]이 막히는지 확인용
+  //    5번 스터디장은 hire_kang이라, 확인하려면 lib/current-user.ts의 가짜 사용자를 잠깐 바꿔요
   {
     applicationId: 8,
     studyId: 5,

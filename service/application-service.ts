@@ -23,7 +23,15 @@ export async function getApplicationsByStudy(
     data: applications.filter((application) => application.studyId === studyId),
   };
 }
-
+// 신청 하나 찾기 (승인 · 거절 전에 "어느 스터디의 신청인지" 확인할 때)
+// 없으면 null
+export async function findApplication(
+  applicationId: number,
+): Promise<Application | null> {
+  return (
+    applications.find((item) => item.applicationId === applicationId) ?? null
+  );
+}
 // 신청 하나를 승인 또는 거절
 export async function decideApplication(
   applicationId: number,
