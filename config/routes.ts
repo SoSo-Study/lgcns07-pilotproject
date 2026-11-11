@@ -11,4 +11,7 @@ export const routes = {
   applicants: "/applicants",
   login: "/login",
   signup: "/signup",
+  forgotPassword: "/forgot-password", // 비밀번호 찾기 (보안키 받기)
+  resetPassword: "/reset-password", // 보안키로 비밀번호 다시 만들기
+  findId: "/find-id", // 아이디(이메일) 찾기
 } as const;
