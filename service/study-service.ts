@@ -4,6 +4,7 @@ import type {
   StudyCategory,
   StudyListData,
   StudyListQuery,
+  StudySummary,
 } from "@/types/study";
 import { mockStudies } from "@/lib/mock-studies";
 
@@ -95,4 +96,17 @@ export async function findStudy(studyId: string): Promise<Study | null> {
   // 🧪 API 연결 전: 가짜 데이터에서 찾기
   // API가 나오면 이 줄을 fetch(apiPaths.study.detail(id))로 바꿔요.
   return mockStudies.find((study) => study.studyId === id) ?? null;
+}
+
+// 내가 만든 스터디 — 내 모집글 #13 (화면 ⑦)
+// 🧪 지금은 가짜 데이터에서 스터디장 이름으로 골라요. 최신순.
+//    API가 오면 fetch(apiPaths.study.mine) + 로그인 토큰으로 바꿔요 (서버가 토큰으로 "나"를 알아요).
+export async function getStudiesByAuthor(
+  authorNickname: string,
+): Promise<ApiResponse<StudySummary[]>> {
+  const studies = mockStudies
+    .filter((study) => study.authorNickname === authorNickname)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+  return { success: true, code: 200, message: "", data: studies };
 }
