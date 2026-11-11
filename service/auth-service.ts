@@ -19,7 +19,7 @@ export async function sendEmailCode(
   if (registeredEmails.has(email)) {
     return {
       success: false,
-      code: 409,
+      code: "CONFLICT",
       message: "이미 가입된 이메일이에요.",
       data: null,
     };
@@ -34,7 +34,6 @@ export async function sendEmailCode(
 
   return {
     success: true,
-    code: 200,
     message: "입력하신 이메일로 인증번호를 보냈어요.",
     // 🧪 강사님 테스트 서버도 메일 서버가 없으면 demoCode로 번호를 알려 줘요
     data: { demoCode: code },
@@ -50,7 +49,7 @@ export async function verifyEmailCode(
   if (!saved || saved.code !== code || saved.expiresAt < Date.now()) {
     return {
       success: false,
-      code: 400,
+      code: "BAD_REQUEST",
       message: "인증번호가 맞지 않거나 만료됐어요.",
       data: null,
     };
@@ -59,7 +58,6 @@ export async function verifyEmailCode(
   emailCodes.delete(email); // 한 번 쓰면 끝
   return {
     success: true,
-    code: 200,
     message: "이메일 인증을 마쳤어요.",
     data: { verified: true },
   };
@@ -74,12 +72,12 @@ export async function registerUser(input: {
   if (registeredEmails.has(input.email)) {
     return {
       success: false,
-      code: 409,
+      code: "CONFLICT",
       message: "이미 가입된 이메일이에요.",
       data: null,
     };
   }
 
   registeredEmails.add(input.email);
-  return { success: true, code: 200, message: "가입했어요.", data: null };
+  return { success: true, message: "가입했어요.", data: null };
 }

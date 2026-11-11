@@ -63,7 +63,7 @@ async function StudyDetail({
 
   const author = (
     <span className="font-mono font-bold text-foreground">
-      {study.authorNickname}
+      {study.authorName}
     </span>
   );
 
@@ -93,7 +93,7 @@ async function StudyDetail({
         title={
           <>
             <span className="break-keep">{study.title}</span>{" "}
-            <span className="font-normal text-subtle">#{study.studyId}</span>
+            <span className="font-normal text-subtle">#{study.id}</span>
           </>
         }
         description={

@@ -1,10 +1,18 @@
-// 강사님 Spring API 주소 모음 (서버 주소 앞부분은 .env의 NEXT_PUBLIC_API_URL)
-// ⚠ study · application 쪽은 아직 "가안"이에요. 스웨거가 나오면 이 파일만 고치면 됩니다.
+// 강사님 API 주소 모음 — 서버 주소 앞부분은 .env.local의 API_URL (lib/env.ts에서 읽어요)
+// 11/11 스웨거로 확인한 실제 주소예요. 주소가 바뀌면 이 파일만 고치면 돼요.
 export const apiPaths = {
   auth: {
     login: "/api/v1/auth/login",
-    signup: "/api/v1/auth/register",
+    refresh: "/api/v1/auth/refresh",
+    logout: "/api/v1/auth/logout",
     me: "/api/v1/auth/me",
+    signup: "/api/v1/auth/register",
+    checkEmail: "/api/v1/auth/check-email",
+    sendCode: "/api/v1/auth/email/send-code",
+    verifyCode: "/api/v1/auth/email/verify-code",
+    findId: "/api/v1/auth/find-id",
+    passwordForgot: "/api/v1/auth/password/forgot",
+    passwordReset: "/api/v1/auth/password/reset",
   },
   study: {
     list: "/api/v1/studies",
@@ -13,6 +21,11 @@ export const apiPaths = {
     update: (studyId: number | string) => `/api/v1/studies/${studyId}`,
     remove: (studyId: number | string) => `/api/v1/studies/${studyId}`,
     mine: "/api/v1/studies/me",
+    comments: (studyId: number | string) =>
+      `/api/v1/studies/${studyId}/comments`,
+    bookmarks: (studyId: number | string) =>
+      `/api/v1/studies/${studyId}/bookmarks`,
+    tags: "/api/v1/tags",
   },
   application: {
     apply: (studyId: number | string) =>

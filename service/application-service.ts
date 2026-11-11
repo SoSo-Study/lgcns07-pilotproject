@@ -18,7 +18,6 @@ export async function getApplicationsByStudy(
 ): Promise<ApiResponse<Application[]>> {
   return {
     success: true,
-    code: 200,
     message: "신청 목록을 불러왔어요.",
     data: applications.filter((application) => application.studyId === studyId),
   };
@@ -28,23 +27,19 @@ export async function getApplicationsByStudy(
 export async function findApplication(
   applicationId: number,
 ): Promise<Application | null> {
-  return (
-    applications.find((item) => item.applicationId === applicationId) ?? null
-  );
+  return applications.find((item) => item.id === applicationId) ?? null;
 }
 // 신청 하나를 승인 또는 거절
 export async function decideApplication(
   applicationId: number,
   decision: Exclude<ApplicationStatus, "PENDING">,
 ): Promise<ApiResponse<Application | null>> {
-  const application = applications.find(
-    (item) => item.applicationId === applicationId,
-  );
+  const application = applications.find((item) => item.id === applicationId);
 
   if (!application) {
     return {
       success: false,
-      code: 404,
+      code: "NOT_FOUND",
       message: "신청을 찾을 수 없어요.",
       data: null,
     };
@@ -53,16 +48,14 @@ export async function decideApplication(
   if (application.status !== "PENDING") {
     return {
       success: false,
-      code: 409,
+      code: "CONFLICT",
       message: "이미 처리된 신청이에요.",
       data: null,
     };
   }
 
   // 🧪 서버 규칙 흉내: 자리가 다 찬 스터디는 승인 막기 (거절은 가능)
-  const study = mockStudies.find(
-    (item) => item.studyId === application.studyId,
-  );
+  const study = mockStudies.find((item) => item.id === application.studyId);
   if (
     decision === "APPROVED" &&
     study &&
@@ -70,7 +63,7 @@ export async function decideApplication(
   ) {
     return {
       success: false,
-      code: 409,
+      code: "CONFLICT",
       message: "모집 인원이 다 찼어요.",
       data: null,
     };
@@ -80,7 +73,6 @@ export async function decideApplication(
 
   return {
     success: true,
-    code: 200,
     message: decision === "APPROVED" ? "승인했어요." : "거절했어요.",
     data: application,
   };

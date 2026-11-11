@@ -20,7 +20,7 @@ async function checkStudyOwner(studyId: number): Promise<string | null> {
 
   const study = await findStudy(String(studyId));
   if (!study) return "스터디를 찾을 수 없어요.";
-  if (study.authorNickname !== me.nickname) {
+  if (study.authorId !== me.userId) {
     return "스터디장만 신청자를 관리할 수 있어요.";
   }
   return null;
@@ -31,7 +31,7 @@ async function checkStudyOwner(studyId: number): Promise<string | null> {
 export async function getApplicationsAction(studyId: number) {
   const ownerError = await checkStudyOwner(studyId);
   if (ownerError) {
-    return { success: false, code: 403, message: ownerError, data: [] };
+    return { success: false, code: "FORBIDDEN", message: ownerError, data: [] };
   }
   return getApplicationsByStudy(studyId);
 }
@@ -59,7 +59,7 @@ export async function decideApplicationAction(
 
   // 2. 🔒 이 신청이 들어온 스터디의 스터디장인지 확인
   const application = await findApplication(parsed.data.applicationId);
-  if (!application) {
+  if (!application || application.studyId === undefined) {
     return { message: "신청을 찾을 수 없어요." };
   }
   const ownerError = await checkStudyOwner(application.studyId);

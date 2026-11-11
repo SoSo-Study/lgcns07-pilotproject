@@ -72,8 +72,8 @@ async function Applicants({
 
   // 3. 주소의 studyId(글자) → 숫자. 없으면 내 스터디 중 첫 번째(가장 최근)
   const selectedId =
-    typeof studyId === "string" ? Number(studyId) : myStudies[0].studyId;
-  const study = myStudies.find((item) => item.studyId === selectedId);
+    typeof studyId === "string" ? Number(studyId) : myStudies[0].id;
+  const study = myStudies.find((item) => item.id === selectedId);
 
   const header = (
     <PageHeader

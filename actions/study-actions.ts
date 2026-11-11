@@ -31,7 +31,7 @@ export async function loadMyStudies() {
   if (!me) {
     return {
       success: false,
-      code: 401,
+      code: "UNAUTHORIZED",
       message: "로그인이 필요해요.",
       data: [],
     };

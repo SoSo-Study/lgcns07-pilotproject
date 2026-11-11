@@ -1,7 +1,7 @@
 import type { StudySummary } from "@/types/study";
 
 type StudySelectProps = {
-  studies: Pick<StudySummary, "studyId" | "title">[];
+  studies: Pick<StudySummary, "id" | "title">[];
   selectedId: number;
 };
 
@@ -20,7 +20,7 @@ export function StudySelect({ studies, selectedId }: StudySelectProps) {
         className="h-8 max-w-60 truncate rounded-md border border-border bg-card px-2 text-sm"
       >
         {studies.map((study) => (
-          <option key={study.studyId} value={study.studyId}>
+          <option key={study.id} value={study.id}>
             {study.title}
           </option>
         ))}
