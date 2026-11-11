@@ -13,6 +13,7 @@ export const apiPaths = {
     findId: "/api/v1/auth/find-id",
     passwordForgot: "/api/v1/auth/password/forgot",
     passwordReset: "/api/v1/auth/password/reset",
+    changePassword: "/api/v1/users/me/password", // 로그인한 채 바꾸기
   },
   study: {
     list: "/api/v1/studies",
@@ -36,5 +37,6 @@ export const apiPaths = {
       `/api/v1/studies/${studyId}/applications`,
     decide: (applicationId: number | string) =>
       `/api/v1/applications/${applicationId}`,
+    mine: "/api/v1/applications/me",
   },
 } as const;

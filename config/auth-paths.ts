@@ -7,7 +7,7 @@ export const protectedPaths = [
   routes.myStudies,
   routes.studyWrite,
   routes.applicants,
-  "/profile", // ⑧ 내 프로필 (#42) — 화면이 생기면 routes로 옮기기
+  routes.profile, // ⑧ 내 프로필 (#42)
 ];
 
 /** 로그인했으면 들어갈 필요가 없는 주소 → 목록으로 */

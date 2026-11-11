@@ -54,3 +54,39 @@ export async function registerUser(input: {
     data: null,
   };
 }
+
+/** 내 정보 — GET /auth/me 응답 중 화면에 쓰는 것만 (토큰 값은 안 꺼내요) */
+export type MyAccount = {
+  userId: number;
+  email: string;
+  name: string;
+  role?: string;
+  statusMessage?: string | null;
+};
+
+// 내 정보 — GET /api/v1/auth/me (⑧ 프로필)
+export async function getMyAccount(
+  token: string,
+): Promise<ApiResponse<MyAccount | null>> {
+  const result = await apiRequest<MyAccount & Record<string, unknown>>(
+    apiPaths.auth.me,
+    { token },
+  );
+  if (!result.success || !result.data) return { ...result, data: null };
+  // 🔒 응답에 토큰이 같이 와도 화면으로 넘기지 않게 필요한 값만 골라요 (#45 · 강의 11/9)
+  const { userId, email, name, role, statusMessage } = result.data;
+  return { ...result, data: { userId, email, name, role, statusMessage } };
+}
+
+// 비밀번호 바꾸기 — POST /api/v1/users/me/password { currentPassword, newPassword }
+export async function changeMyPassword(
+  token: string,
+  input: { currentPassword: string; newPassword: string },
+): Promise<ApiResponse<null>> {
+  const result = await apiRequest(apiPaths.auth.changePassword, {
+    method: "POST",
+    token,
+    body: input,
+  });
+  return { ...result, data: null };
+}

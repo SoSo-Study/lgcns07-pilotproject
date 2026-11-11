@@ -30,7 +30,7 @@ export async function SidebarAccount() {
   }
 
   return (
-    <SidebarUser nickname={me.nickname}>
+    <SidebarUser nickname={me.nickname} href={routes.profile}>
       <LogoutButton />
     </SidebarUser>
   );

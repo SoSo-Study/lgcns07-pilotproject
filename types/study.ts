@@ -76,6 +76,15 @@ export type Application = {
   createdAt: string;
 };
 
+// 내가 신청한 스터디 한 줄 (GET /api/v1/applications/me의 items) — ⑧ 프로필
+export type MyApplication = {
+  id: number;
+  status: ApplicationStatus;
+  message: string;
+  createdAt: string;
+  study: Pick<Study, "id" | "title" | "category" | "status" | "authorName">;
+};
+
 // 목록을 가져올 때 보내는 조건 (주소의 ?q=&category=&sort=&page= 와 짝)
 export type StudyListQuery = {
   q?: string; // 검색어
