@@ -1,4 +1,5 @@
 import { mockApplications } from "@/lib/mock-applications";
+import { mockStudies } from "@/lib/mock-studies";
 import type { ApiResponse } from "@/types/api-response";
 import type { Application, ApplicationStatus } from "@/types/study";
 
@@ -46,6 +47,23 @@ export async function decideApplication(
       success: false,
       code: 409,
       message: "이미 처리된 신청이에요.",
+      data: null,
+    };
+  }
+
+  // 🧪 서버 규칙 흉내: 자리가 다 찬 스터디는 승인 막기 (거절은 가능)
+  const study = mockStudies.find(
+    (item) => item.studyId === application.studyId,
+  );
+  if (
+    decision === "APPROVED" &&
+    study &&
+    study.currentMembers >= study.maxMembers
+  ) {
+    return {
+      success: false,
+      code: 409,
+      message: "모집 인원이 다 찼어요.",
       data: null,
     };
   }
