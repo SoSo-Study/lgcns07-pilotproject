@@ -33,9 +33,14 @@ export function StudyTable({
             {closedCount !== undefined && <Count value={closedCount} />}
           </span>
         </div>
-        <span className={studyColumns.members}>인원</span>
-        <span className={studyColumns.deadline}>마감일</span>
-        <span className={studyColumns.author}>스터디장</span>
+        {/* 칸 이름은 표 모양(1024px 이상)일 때만 */}
+        <span className={`hidden lg:block ${studyColumns.members}`}>인원</span>
+        <span className={`hidden lg:block ${studyColumns.deadline}`}>
+          마감일
+        </span>
+        <span className={`hidden lg:block ${studyColumns.author}`}>
+          스터디장
+        </span>
       </div>
 
       {studies.length === 0 ? (
