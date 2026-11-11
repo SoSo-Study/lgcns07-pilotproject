@@ -60,4 +60,13 @@ export const mockApplications: Application[] = [
     status: "PENDING",
     createdAt: "2026-11-10T08:00:00",
   },
+  // 🧪 자리가 다 찬 스터디(5번, 5/5)에 들어온 신청 — [승인]이 막히는지 확인용
+  {
+    applicationId: 8,
+    studyId: 5,
+    applicantNickname: "fe_choi",
+    message: "면접 준비 같이 하고 싶어요",
+    status: "PENDING",
+    createdAt: "2026-11-11T09:00:00",
+  },
 ];

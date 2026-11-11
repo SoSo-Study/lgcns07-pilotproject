@@ -41,6 +41,9 @@ async function Applicants({
   const result = await getApplicationsAction(selectedId);
   const applications = result.success ? result.data : [];
 
+  // 자리가 다 찼는지 (다 찼으면 [승인] 버튼을 막아요. 서버도 한 번 더 막아요)
+  const isFull = study ? study.currentMembers >= study.maxMembers : false;
+
   return (
     <>
       <PageHeader
@@ -56,7 +59,12 @@ async function Applicants({
             currentMembers={study.currentMembers}
             maxMembers={study.maxMembers}
           />
-          <ApplicantTable applications={applications} />
+          {isFull && (
+            <p className="mb-3 text-sm text-muted-foreground">
+              모집 인원이 다 차서 더 승인할 수 없어요. 거절은 할 수 있어요.
+            </p>
+          )}
+          <ApplicantTable applications={applications} isFull={isFull} />
           <p className="mt-3 text-xs text-muted-foreground">
             승인하면 남은 자리가 줄고, 자리가 0이 되면 모집 상태가 자동으로
             &lsquo;마감&rsquo;으로 바뀌어요.

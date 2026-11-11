@@ -32,6 +32,10 @@ export type StudyListData = {
   totalItems: number;
   hasNextPage: boolean;
   hasPreviousPage: boolean;
+  // 아래 개수는 "쪽과 상관없이" 조건에 맞는 전체 기준 (API 요청서 #14의 1번)
+  openCount: number; // 표 머리줄 "모집 중 9"
+  closedCount: number; // 표 머리줄 "마감 3"
+  categoryCounts: Record<StudyCategory | "ALL", number>; // 분야 칩 숫자 (검색어만 반영)
 };
 
 export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -43,4 +47,12 @@ export type Application = {
   message: string;
   status: ApplicationStatus;
   createdAt: string;
+};
+
+// 목록을 가져올 때 보내는 조건 (주소의 ?q=&category=&sort=&page= 와 짝)
+export type StudyListQuery = {
+  q?: string; // 검색어
+  category?: StudyCategory; // 분야
+  sort?: "latest" | "oldest"; // 최신순 / 오래된순
+  page?: number; // 쪽 번호 (1부터)
 };
