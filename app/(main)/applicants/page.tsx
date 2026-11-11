@@ -37,7 +37,7 @@ async function Applicants({
 
   // 1. 내 스터디 목록 (⑦ 내 모집글과 같은 함수 — 로그인한 사람 기준)
   const myStudiesResult = await loadMyStudies();
-  if (!myStudiesResult.success) {
+  if (!myStudiesResult.success || !myStudiesResult.data) {
     return (
       <>
         <PageHeader title={TITLE} description={DESCRIPTION} />
@@ -47,7 +47,7 @@ async function Applicants({
       </>
     );
   }
-  const myStudies = myStudiesResult.data;
+  const myStudies = myStudiesResult.data.items;
 
   // 2. 내 스터디가 하나도 없으면 → 만들러 가기
   if (myStudies.length === 0) {

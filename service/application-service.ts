@@ -1,79 +1,30 @@
-import { mockApplications } from "@/lib/mock-applications";
-import { mockStudies } from "@/lib/mock-studies";
+import { apiPaths } from "@/config/api-paths";
+import { apiRequest } from "@/lib/api-client";
 import type { ApiResponse } from "@/types/api-response";
 import type { Application, ApplicationStatus } from "@/types/study";
 
-// 신청(application) API를 부르는 곳
-// 🧪 지금은 강사님 API가 없어서, 서버 메모리에 가짜 데이터를 두고 흉내만 내요.
-//    (서버를 껐다 켜면 처음 상태로 돌아가요)
-//    API가 나오면 아래 함수 안쪽만 fetch로 바꾸면 돼요. 함수 이름 · 돌려주는 모양은 그대로!
-//    주소는 config/api-paths.ts의 apiPaths.application.listByStudy / decide
-const applications: Application[] = mockApplications.map((application) => ({
-  ...application,
-}));
+// 신청(application) API를 부르는 곳 — 로그인 토큰이 꼭 필요해요
+// 스터디장만 볼 수 있는지 · 이미 처리됐는지 · 자리가 다 찼는지는 강사님 서버가 막아 줘요 (403 · 409)
 
-// 스터디 하나에 들어온 신청 목록
+// 스터디 하나에 들어온 신청 목록 — GET /api/v1/studies/{id}/applications (스터디장만)
 export async function getApplicationsByStudy(
+  token: string,
   studyId: number,
-): Promise<ApiResponse<Application[]>> {
-  return {
-    success: true,
-    message: "신청 목록을 불러왔어요.",
-    data: applications.filter((application) => application.studyId === studyId),
-  };
+): Promise<ApiResponse<Application[] | null>> {
+  return apiRequest<Application[]>(apiPaths.application.listByStudy(studyId), {
+    token,
+  });
 }
-// 신청 하나 찾기 (승인 · 거절 전에 "어느 스터디의 신청인지" 확인할 때)
-// 없으면 null
-export async function findApplication(
-  applicationId: number,
-): Promise<Application | null> {
-  return applications.find((item) => item.id === applicationId) ?? null;
-}
-// 신청 하나를 승인 또는 거절
+
+// 신청 하나를 승인 또는 거절 — PATCH /api/v1/applications/{id} { status }
 export async function decideApplication(
+  token: string,
   applicationId: number,
   decision: Exclude<ApplicationStatus, "PENDING">,
 ): Promise<ApiResponse<Application | null>> {
-  const application = applications.find((item) => item.id === applicationId);
-
-  if (!application) {
-    return {
-      success: false,
-      code: "NOT_FOUND",
-      message: "신청을 찾을 수 없어요.",
-      data: null,
-    };
-  }
-
-  if (application.status !== "PENDING") {
-    return {
-      success: false,
-      code: "CONFLICT",
-      message: "이미 처리된 신청이에요.",
-      data: null,
-    };
-  }
-
-  // 🧪 서버 규칙 흉내: 자리가 다 찬 스터디는 승인 막기 (거절은 가능)
-  const study = mockStudies.find((item) => item.id === application.studyId);
-  if (
-    decision === "APPROVED" &&
-    study &&
-    study.currentMembers >= study.maxMembers
-  ) {
-    return {
-      success: false,
-      code: "CONFLICT",
-      message: "모집 인원이 다 찼어요.",
-      data: null,
-    };
-  }
-
-  application.status = decision;
-
-  return {
-    success: true,
-    message: decision === "APPROVED" ? "승인했어요." : "거절했어요.",
-    data: application,
-  };
+  return apiRequest<Application>(apiPaths.application.decide(applicationId), {
+    method: "PATCH",
+    token,
+    body: { status: decision },
+  });
 }

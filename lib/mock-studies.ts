@@ -1,7 +1,7 @@
 import type { Study } from "@/types/study";
 
-// 🧪 API가 준비되기 전에 화면을 만들 때 쓰는 가짜 데이터 (피그마 ① 화면과 같은 내용)
-// API가 연결되면 service 파일에서 이 파일 대신 fetch를 쓰고, 이 파일은 지워요.
+// 🧪 가짜 데이터 — 이제 실제 화면은 강사님 API를 써요 (#46).
+// 남은 쓰임: /ui-kit 부품 견본(StudyTable 예시)에서만. 실제 화면에서 import하지 않아요.
 export const mockStudies: Study[] = [
   {
     id: 1,

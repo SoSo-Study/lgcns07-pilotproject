@@ -1,9 +1,10 @@
 import { cache } from "react";
 import { apiPaths } from "@/config/api-paths";
 import { apiRequest } from "@/lib/api-client";
-import { mockStudies } from "@/lib/mock-studies";
+import { getAccessToken } from "@/lib/auth-session";
 import type { ApiResponse } from "@/types/api-response";
 import type {
+  PageData,
   Study,
   StudyListData,
   StudyListQuery,
@@ -54,22 +55,25 @@ export const findStudy = cache(
     const id = Number(studyId);
     if (!Number.isInteger(id) || id <= 0) return null;
 
-    const result = await apiRequest<Study>(apiPaths.study.detail(id));
+    // 로그인했으면 토큰을 붙여야 "내 신청 상태" · "찜했는지"가 내 기준으로 와요
+    const result = await apiRequest<Study>(apiPaths.study.detail(id), {
+      token: await getAccessToken(),
+    });
     if (result.success && result.data) return result.data;
     if (result.status === 404) return null;
     throw new Error(result.message);
   },
 );
 
-// 내가 만든 스터디 — 내 모집글 #13 (화면 ⑦)
-// 🧪 지금은 가짜 데이터에서 스터디장 이름으로 골라요. 최신순.
-//    로그인(#4)이 붙으면 GET /api/v1/studies/me + 토큰으로 바꿔요 (서버가 토큰으로 "나"를 알아요).
-export async function getStudiesByAuthor(
-  authorName: string,
-): Promise<ApiResponse<StudySummary[]>> {
-  const studies = mockStudies
-    .filter((study) => study.authorName === authorName)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-
-  return { success: true, message: "", data: studies };
+// 내가 만든 스터디 — 내 모집글 #13 (⑦) · 신청자 관리 스터디 고르기 (④)
+// GET /api/v1/studies/me — "나"는 서버가 토큰으로 알아요 (내 id를 보내지 않아요)
+export async function getMyStudies(
+  token: string,
+  page = 1,
+  size = 50,
+): Promise<ApiResponse<PageData<StudySummary> | null>> {
+  return apiRequest<PageData<StudySummary>>(apiPaths.study.mine, {
+    token,
+    query: { page: Math.max(1, page) - 1, size },
+  });
 }

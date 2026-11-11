@@ -2,38 +2,39 @@
 
 import { revalidatePath } from "next/cache";
 import { routes } from "@/config/routes";
-import { getCurrentUser } from "@/lib/current-user";
+import { getServerAuth } from "@/lib/auth-session";
 import { decideApplicationSchema } from "@/schema/application-schema";
 import {
   decideApplication,
-  findApplication,
   getApplicationsByStudy,
 } from "@/service/application-service";
 import { findStudy } from "@/service/study-service";
 
-// 🔒 이 스터디의 스터디장이 "나"인지 확인 (#4 본문: "내 것"은 서버가 로그인 정보로 정해요)
-// 괜찮으면 null, 아니면 화면에 보여 줄 문구를 돌려줘요.
-// (export 안 한 도우미 함수라 화면에서 직접 부를 수 없어요)
-async function checkStudyOwner(studyId: number): Promise<string | null> {
-  const me = await getCurrentUser();
-  if (!me) return "로그인이 필요해요.";
+// 스터디 하나에 들어온 신청 목록 불러오기 (화면 → 여기 → service)
+// 🔒 여러 겹 확인 (#45 B6): 로그인했는지 → 내 스터디인지(authorId = 내 userId) → 서버도 한 번 더(403)
+export async function getApplicationsAction(studyId: number) {
+  const auth = await getServerAuth();
+  if (!auth) {
+    return {
+      success: false,
+      code: "UNAUTHORIZED",
+      message: "로그인이 필요해요.",
+      data: [],
+    };
+  }
 
   const study = await findStudy(String(studyId));
-  if (!study) return "스터디를 찾을 수 없어요.";
-  if (study.authorId !== me.userId) {
-    return "스터디장만 신청자를 관리할 수 있어요.";
+  if (!study || study.authorId !== auth.userId) {
+    return {
+      success: false,
+      code: "FORBIDDEN",
+      message: "스터디장만 신청자를 관리할 수 있어요.",
+      data: [],
+    };
   }
-  return null;
-}
 
-// 스터디 하나에 들어온 신청 목록 불러오기 (화면 → 여기 → service)
-// 스터디장만 볼 수 있어요 (다른 사람이 주소로 들어와도 막기)
-export async function getApplicationsAction(studyId: number) {
-  const ownerError = await checkStudyOwner(studyId);
-  if (ownerError) {
-    return { success: false, code: "FORBIDDEN", message: ownerError, data: [] };
-  }
-  return getApplicationsByStudy(studyId);
+  const result = await getApplicationsByStudy(auth.accessToken, studyId);
+  return { ...result, data: result.data ?? [] };
 }
 
 // 승인 · 거절 결과를 화면에 돌려주는 모양
@@ -52,23 +53,17 @@ export async function decideApplicationAction(
     applicationId: formData.get("applicationId"),
     decision: formData.get("decision"),
   });
-
   if (!parsed.success) {
     return { message: "잘못된 요청이에요. 새로고침 후 다시 시도해 주세요." };
   }
 
-  // 2. 🔒 이 신청이 들어온 스터디의 스터디장인지 확인
-  const application = await findApplication(parsed.data.applicationId);
-  if (!application || application.studyId === undefined) {
-    return { message: "신청을 찾을 수 없어요." };
-  }
-  const ownerError = await checkStudyOwner(application.studyId);
-  if (ownerError) {
-    return { message: ownerError };
-  }
+  // 2. 🔒 로그인 확인 — 스터디장인지 · 이미 처리됐는지 · 자리가 찼는지는 서버가 막아요(403 · 409)
+  const auth = await getServerAuth();
+  if (!auth) return { message: "로그인이 필요해요." };
 
   // 3. service에 처리 요청
   const result = await decideApplication(
+    auth.accessToken,
     parsed.data.applicationId,
     parsed.data.decision,
   );
@@ -78,7 +73,7 @@ export async function decideApplicationAction(
     return { message: result.message };
   }
 
-  // 5. 성공하면 화면을 최신 상태로 다시 그리기 (숫자 카드 · 표가 같이 바뀌어요)
+  // 5. 성공하면 화면을 최신 상태로 다시 그리기 (숫자 카드 · 표 · 남은 자리가 같이 바뀌어요)
   revalidatePath(routes.applicants);
   return null;
 }
