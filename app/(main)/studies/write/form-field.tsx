@@ -7,7 +7,7 @@ import { handleStudySubmitAction } from "./actions";
 
 export default function StudyWriteForm() {
   const router = useRouter();
-  const [tags, setTags] = useState<string[]>(["React", "Next.js"]);
+  const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [mode, setMode] = useState("온라인");
   const [deadline, setDeadline] = useState("");
@@ -40,7 +40,7 @@ export default function StudyWriteForm() {
 
       // 폼 초기화
       form.reset(); // 제목, 분야, 모집 인원, 소개
-      setTags(["React", "Next.js"]); // 태그를 처음 상태로
+      setTags([]); // 태그를 처음 상태로
       setTagInput("");
       setMode("온라인");
       setDeadline("");
