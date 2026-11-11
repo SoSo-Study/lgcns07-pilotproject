@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
@@ -18,7 +19,27 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { routes } from "@/config/routes";
+import { getCurrentUser } from "@/lib/current-user";
 import { formatDate } from "@/lib/format-date";
+import { AuthorActions } from "./author-actions";
+
+// 탭 제목 · 카톡 미리보기 — 스터디마다 다르게
+export async function generateMetadata({
+  params,
+}: PageProps<"/studies/[studyId]">): Promise<Metadata> {
+  const { studyId } = await params;
+  const study = await getStudyDetail(studyId);
+  if (!study) return { title: "스터디를 찾을 수 없어요" };
+
+  // 소개 앞부분 100자 (줄바꿈은 띄어쓰기로)
+  const description = study.content.replace(/\s+/g, " ").slice(0, 100);
+
+  return {
+    title: study.title,
+    description,
+    openGraph: { title: study.title, description },
+  };
+}
 
 // 피그마 ② 스터디 상세 + 신청 — 담당: 이슈 #6 (신청 버튼은 #8)
 // 강사님 방식: page는 동기 함수로 두고, params를 await 하는 부분은 Suspense 안 자식에서
@@ -39,12 +60,16 @@ async function StudyDetail({
   // 정보 카드가 오늘 날짜(new Date)로 D-n을 계산해요.
   // cacheComponents에서는 "요청이 왔을 때만 실행"이라고 먼저 알려야 해요.
   await connection();
-  const study = await getStudyDetail(studyId);
+  const [study, me] = await Promise.all([
+    getStudyDetail(studyId),
+    getCurrentUser(),
+  ]);
   if (!study) notFound(); // 같은 폴더의 not-found.tsx가 대신 나와요
+  const isAuthor = me?.userId === study.authorId; // 내 글이면 [수정] · [삭제]
 
   const author = (
     <span className="font-mono font-bold text-foreground">
-      {study.authorNickname}
+      {study.authorName}
     </span>
   );
 
@@ -71,10 +96,11 @@ async function StudyDetail({
 
       <PageHeader
         className="border-b border-border pb-4"
+        action={isAuthor ? <AuthorActions studyId={study.id} /> : undefined}
         title={
           <>
             <span className="break-keep">{study.title}</span>{" "}
-            <span className="font-normal text-subtle">#{study.studyId}</span>
+            <span className="font-normal text-subtle">#{study.id}</span>
           </>
         }
         description={
@@ -87,14 +113,17 @@ async function StudyDetail({
         }
       />
 
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        <Panel className="min-w-0 flex-1" header={<>{author} · 스터디 소개</>}>
-          <p className="break-words break-keep whitespace-pre-line">
+      <div className="flex flex-col gap-6 lg:flex-1 lg:flex-row lg:items-start">
+        <Panel
+          className="min-w-0 flex-1 lg:flex lg:flex-col lg:self-stretch lg:*:flex-1"
+          header={<>{author} · 스터디 소개</>}
+        >
+          <p className="max-w-prose wrap-break-word break-keep whitespace-pre-line">
             {study.content}
           </p>
         </Panel>
 
-        <aside className="lg:w-72 lg:shrink-0">
+        <aside className="lg:sticky lg:top-8 lg:w-72 lg:shrink-0">
           <StudyInfoCard study={study}>
             {/* #8 참여 신청: 이 버튼을 신청 폼으로 바꿔요 */}
             <Button disabled className="w-full">

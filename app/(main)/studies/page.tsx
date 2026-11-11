@@ -62,7 +62,7 @@ async function StudyList({
   // 2. 그 조건으로 목록 가져오기 (화면 → 액션 → 서비스)
   const result = await loadStudyList(query);
 
-  if (!result.success) {
+  if (!result.success || !result.data) {
     return (
       <p role="alert" className="text-sm text-destructive">
         {result.message}
@@ -70,9 +70,9 @@ async function StudyList({
     );
   }
 
-  const { studies, currentPage, totalPages, openCount, closedCount } =
-    result.data;
+  const { items: studies, totalPages, openCount, closedCount } = result.data;
   const { categoryCounts } = result.data;
+  const currentPage = result.data.page + 1; // API는 0부터, 화면 · 주소는 1부터
   const hasFilter = q !== "" || category !== undefined;
 
   return (

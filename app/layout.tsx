@@ -15,7 +15,10 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "소소스터디",
+  title: {
+    template: "%s | 소소스터디",
+    default: "소소스터디",
+  },
   description: "함께 커밋하는 스터디 — 개발자 스터디 모집",
 };
 

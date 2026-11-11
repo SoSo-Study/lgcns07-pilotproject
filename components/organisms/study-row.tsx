@@ -22,7 +22,7 @@ export const studyColumns = {
 
 // 피그마 StudyRow — 목록 한 줄 (받은 값만 그림. 데이터 불러오기는 page · service에서)
 // 1024px 이상: 한 줄 표 · 그보다 좁으면: 상태 → 제목 · 태그 → 인원 · 마감일 · 스터디장 순서로 쌓은 카드
-// 사용: {studies.map((study) => <StudyRow key={study.studyId} study={study} />)}
+// 사용: {studies.map((study) => <StudyRow key={study.id} study={study} />)}
 export function StudyRow({ study }: StudyRowProps) {
   return (
     <li className="flex flex-col gap-2 border-t border-border px-4 py-3 hover:bg-muted/40 lg:flex-row lg:items-center lg:gap-4">
@@ -32,7 +32,7 @@ export function StudyRow({ study }: StudyRowProps) {
 
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <Link
-          href={routes.study(study.studyId)}
+          href={routes.study(study.id)}
           className="truncate font-bold hover:text-link hover:underline"
         >
           {study.title}
@@ -66,7 +66,7 @@ export function StudyRow({ study }: StudyRowProps) {
         >
           <User className="size-3.5 shrink-0" aria-hidden />
           <span className="sr-only">스터디장</span>
-          <span className="truncate">{study.authorNickname}</span>
+          <span className="truncate">{study.authorName}</span>
         </span>
       </div>
     </li>

@@ -36,7 +36,7 @@ export default function MyStudiesPage() {
 async function MyStudyList() {
   const result = await loadMyStudies();
 
-  if (!result.success) {
+  if (!result.success || !result.data) {
     return (
       <p role="alert" className="text-sm text-destructive">
         {result.message}
@@ -44,7 +44,7 @@ async function MyStudyList() {
     );
   }
 
-  const studies = result.data;
+  const studies = result.data.items;
   const openCount = studies.filter((study) => study.status === "OPEN").length;
   const closedCount = studies.length - openCount;
 

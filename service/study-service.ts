@@ -1,112 +1,128 @@
+import { cache } from "react";
+import { apiPaths } from "@/config/api-paths";
+import { apiRequest } from "@/lib/api-client";
+import { getAccessToken } from "@/lib/auth-session";
 import type { ApiResponse } from "@/types/api-response";
 import type {
+  PageData,
   Study,
-  StudyCategory,
   StudyListData,
   StudyListQuery,
   StudySummary,
 } from "@/types/study";
-import { mockStudies } from "@/lib/mock-studies";
 
-// 🧪 가짜 데이터가 6개뿐이라 쪽 번호가 보이도록 4개씩 (API가 오면 size=10)
-const PAGE_SIZE = 4;
-
-const categories: StudyCategory[] = [
-  "FRONTEND",
-  "BACKEND",
-  "ALGORITHM",
-  "CS",
-  "INTERVIEW",
-];
+// 한 쪽에 보여 줄 개수 (#14 1번)
+const PAGE_SIZE = 10;
 
 // 스터디 목록 가져오기 — 목록 #5 · 검색/분야/정렬/쪽 번호 #9
-// 🧪 지금은 가짜 데이터에서 "API가 해 줄 일"(찾기 → 세기 → 정렬 → 쪽 나누기)을 흉내 내요.
-//    API가 오면 이 함수 안쪽만 fetch(apiPaths.study.list + 조건)로 바꾸면 돼요.
+// GET /api/v1/studies — 검색 · 분야 · 정렬 · 쪽 나누기 · 개수 세기는 서버가 해 줘요
+// 주소의 page는 1부터, API의 page는 0부터라서 -1 해서 보내요.
 export async function getStudies(
   query: StudyListQuery = {},
-): Promise<ApiResponse<StudyListData>> {
+): Promise<ApiResponse<StudyListData | null>> {
   const { q = "", category, sort = "latest", page = 1 } = query;
+  const request = (zeroBasedPage: number) =>
+    apiRequest<StudyListData>(apiPaths.study.list, {
+      query: {
+        page: zeroBasedPage,
+        size: PAGE_SIZE,
+        q: q.trim() || undefined,
+        category,
+        sort,
+      },
+    });
 
-  // 1) 검색어로 거르기 — 제목이나 기술 태그에 검색어가 들어 있는 것만
-  const keyword = q.trim().toLowerCase();
-  const searched = mockStudies.filter(
-    (study) =>
-      keyword === "" ||
-      study.title.toLowerCase().includes(keyword) ||
-      study.techTags.some((tag) => tag.toLowerCase().includes(keyword)),
-  );
+  const result = await request(Math.max(1, page) - 1);
 
-  // 2) 분야 칩 숫자 — 검색 결과를 분야별로 세기 (분야를 고르기 전 기준)
-  const categoryCounts = { ALL: searched.length } as Record<
-    StudyCategory | "ALL",
-    number
-  >;
-  for (const item of categories) {
-    categoryCounts[item] = searched.filter(
-      (study) => study.category === item,
-    ).length;
+  // 없는 쪽 번호(?page=99)면 마지막 쪽을 다시 가져와요
+  if (
+    result.success &&
+    result.data &&
+    result.data.totalPages > 0 &&
+    result.data.page >= result.data.totalPages
+  ) {
+    return request(result.data.totalPages - 1);
   }
-
-  // 3) 분야로 거르기
-  const filtered = category
-    ? searched.filter((study) => study.category === category)
-    : searched;
-
-  // 4) 표 머리줄 숫자 — 쪽을 나누기 전에 세야 전체 개수가 돼요
-  const openCount = filtered.filter((study) => study.status === "OPEN").length;
-  const closedCount = filtered.length - openCount;
-
-  // 5) 정렬 — 최신순(기본) / 오래된순
-  const sorted = [...filtered].sort((a, b) =>
-    sort === "oldest"
-      ? a.createdAt.localeCompare(b.createdAt)
-      : b.createdAt.localeCompare(a.createdAt),
-  );
-
-  // 6) 쪽 나누기 — 없는 쪽 번호(0 · 99)는 가장 가까운 쪽으로
-  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
-  const currentPage = Math.min(Math.max(1, page), totalPages);
-  const start = (currentPage - 1) * PAGE_SIZE;
-  const studies = sorted.slice(start, start + PAGE_SIZE);
-
-  return {
-    success: true,
-    code: 200,
-    message: "",
-    data: {
-      studies,
-      currentPage,
-      totalPages,
-      totalItems: sorted.length,
-      hasNextPage: currentPage < totalPages,
-      hasPreviousPage: currentPage > 1,
-      openCount,
-      closedCount,
-      categoryCounts,
-    },
-  };
+  return result;
 }
 
-// 스터디 하나 찾기 (상세 화면 #6)
-// 주소가 이상하거나(/studies/abc) 없는 번호면 null → 화면에서 404로 보여 줘요.
-export async function findStudy(studyId: string): Promise<Study | null> {
-  const id = Number(studyId);
-  if (!Number.isInteger(id) || id <= 0) return null;
+// 스터디 하나 (상세 화면 #6) — GET /api/v1/studies/{id}
+// 주소가 이상하거나(/studies/abc) 없는 번호(404)면 null → 화면에서 notFound()
+// 서버와 연결이 안 되는 등 다른 실패는 오류로 알려요 (없는 글로 착각하지 않게)
+// cache(): 같은 요청 안에서 탭 제목(generateMetadata)과 본문이 두 번 불러도 한 번만 가져와요
+export const findStudy = cache(
+  async (studyId: string): Promise<Study | null> => {
+    const id = Number(studyId);
+    if (!Number.isInteger(id) || id <= 0) return null;
 
-  // 🧪 API 연결 전: 가짜 데이터에서 찾기
-  // API가 나오면 이 줄을 fetch(apiPaths.study.detail(id))로 바꿔요.
-  return mockStudies.find((study) => study.studyId === id) ?? null;
+    // 로그인했으면 토큰을 붙여야 "내 신청 상태" · "찜했는지"가 내 기준으로 와요
+    const result = await apiRequest<Study>(apiPaths.study.detail(id), {
+      token: await getAccessToken(),
+    });
+    if (result.success && result.data) return result.data;
+    if (result.status === 404) return null;
+    throw new Error(result.message);
+  },
+);
+
+// 내가 만든 스터디 — 내 모집글 #13 (⑦) · 신청자 관리 스터디 고르기 (④)
+// GET /api/v1/studies/me — "나"는 서버가 토큰으로 알아요 (내 id를 보내지 않아요)
+export async function getMyStudies(
+  token: string,
+  page = 1,
+  size = 50,
+): Promise<ApiResponse<PageData<StudySummary> | null>> {
+  return apiRequest<PageData<StudySummary>>(apiPaths.study.mine, {
+    token,
+    query: { page: Math.max(1, page) - 1, size },
+  });
 }
 
-// 내가 만든 스터디 — 내 모집글 #13 (화면 ⑦)
-// 🧪 지금은 가짜 데이터에서 스터디장 이름으로 골라요. 최신순.
-//    API가 오면 fetch(apiPaths.study.mine) + 로그인 토큰으로 바꿔요 (서버가 토큰으로 "나"를 알아요).
-export async function getStudiesByAuthor(
-  authorNickname: string,
-): Promise<ApiResponse<StudySummary[]>> {
-  const studies = mockStudies
-    .filter((study) => study.authorNickname === authorNickname)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+// 보내는 값 (CreateStudyRequest · UpdateStudyRequest) — 코드 값 · 숫자, 이름은 받을 때와 같게
+type StudyInput = Pick<
+  Study,
+  | "title"
+  | "category"
+  | "techTags"
+  | "maxMembers"
+  | "deadline"
+  | "mode"
+  | "content"
+>;
 
-  return { success: true, code: 200, message: "", data: studies };
+// ③ 등록 — POST /api/v1/studies (작성자는 서버가 토큰으로)
+export async function createStudy(
+  token: string,
+  input: StudyInput,
+): Promise<ApiResponse<Study | null>> {
+  return apiRequest<Study>(apiPaths.study.create, {
+    method: "POST",
+    token,
+    body: input,
+  });
+}
+
+// ③ 수정 — PUT /api/v1/studies/{id} (스터디장만, 정원은 현재 인원보다 작게 못 바꿈 — 서버 규칙)
+export async function updateStudy(
+  token: string,
+  studyId: number,
+  input: StudyInput,
+): Promise<ApiResponse<Study | null>> {
+  return apiRequest<Study>(apiPaths.study.update(studyId), {
+    method: "PUT",
+    token,
+    body: input,
+  });
+}
+
+// ② 삭제 — DELETE /api/v1/studies/{id} (스터디장만)
+export async function deleteStudy(
+  token: string,
+  studyId: number,
+): Promise<ApiResponse<null>> {
+  const result = await apiRequest(apiPaths.study.remove(studyId), {
+    method: "DELETE",
+    token,
+  });
+  return { ...result, data: null };
 }

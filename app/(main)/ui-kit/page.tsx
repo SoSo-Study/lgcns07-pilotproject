@@ -1,7 +1,18 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { CircleDot, Clock, Lock, Mail, Plus, Search } from "lucide-react";
+import {
+  CircleDot,
+  Clock,
+  Lock,
+  LogOut,
+  Mail,
+  Pencil,
+  Plus,
+  Search,
+  Star,
+} from "lucide-react";
 import { CategoryLabel } from "@/components/atoms/category-label";
+import { IconButton } from "@/components/atoms/icon-button";
 import { Pill } from "@/components/atoms/pill";
 import { StatusBadge } from "@/components/atoms/status-badge";
 import { SubmitButton } from "@/components/atoms/submit-button";
@@ -10,6 +21,7 @@ import { CategoryChip } from "@/components/molecules/category-chip";
 import { FormAlert } from "@/components/molecules/form-alert";
 import { FormField } from "@/components/molecules/form-field";
 import { InputBox } from "@/components/molecules/input-box";
+import { LogoutButton } from "@/components/molecules/logout-button";
 import { Pagination } from "@/components/molecules/pagination";
 import { PasswordInput } from "@/components/molecules/password-input";
 import { SearchForm } from "@/components/molecules/search-form";
@@ -207,6 +219,25 @@ export default function UiKitPage() {
       </Sample>
 
       <Sample
+        title="IconButton (atoms/icon-button) — 아이콘 + 이름, 글자 위치 고르기. 할 일은 onClick으로"
+        code={`<IconButton icon={<LogOut />} label="로그아웃" onClick={handleLogout} /> · <IconButton icon={<Star />} label="찜하기" labelPosition="right" /> · <IconButton icon={<Pencil />} label="수정" labelPosition="bottom" /> · <IconButton … pending />`}
+      >
+        <IconButton icon={<LogOut />} label="로그아웃 (글자 숨김)" />
+        <IconButton icon={<Star />} label="찜하기" labelPosition="right" />
+        <IconButton icon={<Pencil />} label="수정" labelPosition="left" />
+        <IconButton icon={<Pencil />} label="수정" labelPosition="bottom" />
+        <IconButton
+          icon={<Star />}
+          label="찜하기"
+          labelPosition="right"
+          variant="outline"
+          size="lg"
+        />
+        <IconButton icon={<LogOut />} label="보내는 중 견본" pending />
+        <IconButton icon={<LogOut />} label="꺼진 견본" disabled />
+      </Sample>
+
+      <Sample
         title="FormField (molecules/form-field) — 라벨 + 입력칸 + 도움말 + 에러 연결"
         code={`<FormField id="email" label="이메일" error={errors.email}>{(field) => <InputBox {...field} name="email" type="email" />}</FormField>`}
       >
@@ -303,7 +334,7 @@ export default function UiKitPage() {
 
       <Sample
         title="빈 화면 (templates/empty-state) · 사이드바 사용자 (molecules/sidebar-user)"
-        code={`<EmptyState title="검색 결과가 없어요" /> · <SidebarUser nickname="dev_kim">{로그아웃 버튼}</SidebarUser>`}
+        code={`<EmptyState title="검색 결과가 없어요" /> · <SidebarUser nickname="dev_kim"><LogoutButton /></SidebarUser>`}
       >
         <div className="w-full rounded-md border border-border bg-card">
           <EmptyState
@@ -312,7 +343,9 @@ export default function UiKitPage() {
           />
         </div>
         <div className="w-64 rounded-md border border-border bg-sidebar p-3">
-          <SidebarUser nickname="dev_kim" />
+          <SidebarUser nickname="dev_kim">
+            <LogoutButton />
+          </SidebarUser>
         </div>
       </Sample>
     </section>

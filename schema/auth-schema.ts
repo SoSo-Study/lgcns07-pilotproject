@@ -47,17 +47,25 @@ export const loginSchema = z.object({
   password: z.string().min(1, "비밀번호를 입력해 주세요"),
 });
 
+/** 비밀번호 + 비밀번호 확인 두 칸 (가입 · 재설정이 같이 써요) */
+const passwordPair = z.object({
+  password: newPasswordField,
+  passwordConfirm: z.string().min(1, "비밀번호를 한 번 더 입력해 주세요"),
+});
+
 /** 회원가입 폼 (이메일 인증은 따로 — 인증번호 줄에서 확인해요) */
 export const signupSchema = z
   .object({
     email: emailField,
     nickname: nicknameField,
-    password: newPasswordField,
-    passwordConfirm: z.string().min(1, "비밀번호를 한 번 더 입력해 주세요"),
+    ...passwordPair.shape,
   })
   .refine((values) => values.password === values.passwordConfirm, {
     path: ["passwordConfirm"], // 에러를 "비밀번호 확인" 칸 아래에 보여 줘요
     message: "비밀번호가 서로 달라요",
+    // zod 4는 기본으로 "다른 칸이 다 맞을 때만" 비교해요.
+    // when: 비밀번호 두 칸만 올바르면 닉네임이 틀려도 바로 비교해서 같이 알려 줘요
+    when: (payload) => passwordPair.safeParse(payload.value).success,
   });
 
 export type LoginValues = z.infer<typeof loginSchema>;

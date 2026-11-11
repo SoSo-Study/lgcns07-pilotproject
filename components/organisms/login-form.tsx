@@ -8,6 +8,7 @@ import { FormAlert } from "@/components/molecules/form-alert";
 import { FormField } from "@/components/molecules/form-field";
 import { InputBox } from "@/components/molecules/input-box";
 import { PasswordInput } from "@/components/molecules/password-input";
+import { useFlashNotice } from "@/hooks/use-flash-notice";
 import type { AuthNotice } from "@/config/auth-notice";
 import { routes } from "@/config/routes";
 import { fieldErrors } from "@/lib/field-errors";
@@ -36,9 +37,12 @@ export function LoginForm({ callbackUrl, notice }: LoginFormProps) {
   >({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  // 안내(로그아웃했어요 등)는 잠깐만: 글자 입력 · 제출 · 5초 뒤 사라지고, 새로고침해도 안 보여요
+  const [noticeVisible, hideNotice] = useFlashNotice(Boolean(notice));
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); // 브라우저가 페이지를 새로 불러오지 않게
+    hideNotice();
     const formData = new FormData(event.currentTarget);
 
     // 1. 칸 검사 — 틀리면 칸 아래에 문구, 요청은 보내지 않아요
@@ -69,9 +73,14 @@ export function LoginForm({ callbackUrl, notice }: LoginFormProps) {
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
-      {/* 안내(로그아웃했어요 등)는 맨 위 — 실패하면 실패 문구에 자리를 내줘요 */}
-      {notice && !formError && (
+    <form
+      noValidate
+      onSubmit={handleSubmit}
+      onInput={hideNotice}
+      className="flex flex-col gap-4"
+    >
+      {/* 안내(로그아웃했어요 등)는 맨 위에 잠깐 */}
+      {notice && noticeVisible && (
         <FormAlert tone={notice.tone}>{notice.message}</FormAlert>
       )}
 
