@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { CodeXml, Compass, FileText, LogIn, Plus, Users } from "lucide-react";
+import { Compass, FileText, LogIn, Plus, Users } from "lucide-react";
+import { Logo } from "@/components/atoms/logo";
 import { SidebarNavLink } from "@/components/molecules/sidebar-nav-link";
 import { routes } from "@/config/routes";
 import { cn } from "@/lib/utils";
@@ -21,9 +22,7 @@ export function Sidebar({ className }: SidebarProps) {
     >
       {/* 로고 */}
       <Link href={routes.studies} className="mb-6 flex items-center gap-3 px-1">
-        <span className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-          <CodeXml className="size-5" aria-hidden />
-        </span>
+        <Logo />
         <span className="flex flex-col">
           <span className="font-mono text-sm font-bold">soso.study</span>
           <span className="text-xs text-muted-foreground">
