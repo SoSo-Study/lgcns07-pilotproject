@@ -3,6 +3,11 @@
 import { redirect } from "next/navigation";
 import { routes } from "@/config/routes";
 import { getCurrentUser } from "@/lib/current-user";
+import {
+  clearEmailVerified,
+  isEmailVerified,
+  markEmailVerified,
+} from "@/lib/email-verified-cookie";
 import { fieldErrors } from "@/lib/field-errors";
 import {
   emailCodeField,
@@ -21,7 +26,7 @@ import {
 // 화면에서도 검사하지만, 화면을 거치지 않고 직접 부를 수도 있어서 여기서 한 번 더 검사해요.
 
 // 지금 로그인한 사람 — 사이드바 아래 "내 이름 + 로그아웃" 자리에서 써요
-// 로그인 안 했으면 null (지금은 getCurrentUser가 가짜 사용자를 돌려줘요)
+// 로그인 안 했으면 null
 export async function loadMe() {
   return getCurrentUser();
 }
@@ -68,8 +73,8 @@ export async function verifyEmailCodeAction(
   }
 
   const response = await verifyEmailCode(parsedEmail.data, parsedCode.data);
-  // TODO(auth): 성공하면 "이 이메일 인증됨"을 서명된 httpOnly 쿠키(10분)로 남기고,
-  //             signupAction에서 그 쿠키를 확인하기 (스펙 design 6번 — 인증 건너뛰기 막기)
+  // 🔒 성공하면 "이 이메일 인증됨"을 서명된 httpOnly 쿠키(10분)로 → 가입 액션이 확인 (#45 C3)
+  if (response.success) await markEmailVerified(parsedEmail.data);
   return { ok: response.success, message: response.message };
 }
 
@@ -100,7 +105,14 @@ export async function signupAction(
     return { errors: fieldErrors(parsed.error), values };
   }
 
-  // TODO(auth): 인증된 이메일인지 서버에서 확인 (위 verifyEmailCodeAction의 쿠키)
+  // 🔒 인증을 마친 이메일인지 서버에서 확인 — 화면을 건너뛰고 직접 불러도 막혀요
+  if (!(await isEmailVerified(parsed.data.email))) {
+    return {
+      errors: { email: "이메일 인증을 먼저 해 주세요" },
+      values,
+    };
+  }
+
   const response = await registerUser({
     email: parsed.data.email,
     name: parsed.data.nickname, // API 이름은 name
@@ -110,5 +122,6 @@ export async function signupAction(
     return { formError: response.message, values };
   }
 
+  await clearEmailVerified(); // 다 썼으니 지우기
   redirect(routes.loginNotice("signed-up")); // 가입 → 로그인 화면에 "가입했어요"
 }
