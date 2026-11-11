@@ -5,7 +5,7 @@ export interface StudyPostInput {
   category: string;
   capacity: string;
   deadline: string;
-  tags: string;
+  tags: string[];
   mode: string;
   description: string;
 }
