@@ -2,19 +2,19 @@ import Link from "next/link";
 import { CodeXml } from "lucide-react";
 import { routes } from "@/config/routes";
 
-// 로그인 · 회원가입: 사이드바 없이 가운데 카드 하나
+// 로그인 · 회원가입 · 찾기: 사이드바 없이 가운데 위쪽에 로고 + 화면 (피그마 ⑤ · ⑥)
+// 제목 · 카드는 각 화면이 AuthCard(components/templates/auth-card)로 그려요.
 export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center bg-inset px-4 py-12">
-      <Link href={routes.studies} className="mb-6 flex items-center gap-2">
-        <span className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-          <CodeXml className="size-5" aria-hidden />
-        </span>
-        <span className="font-mono text-lg font-bold">soso.study</span>
+    <main className="flex min-h-dvh flex-col items-center bg-background px-4 pt-16 pb-12">
+      <Link
+        href={routes.studies}
+        aria-label="soso.study 홈으로"
+        className="mb-4 flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground"
+      >
+        <CodeXml className="size-6" aria-hidden />
       </Link>
-      <div className="w-full max-w-sm rounded-md border border-border bg-card p-6">
-        {children}
-      </div>
+      {children}
     </main>
   );
 }

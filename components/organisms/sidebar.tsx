@@ -3,11 +3,22 @@ import { Suspense } from "react";
 import { CodeXml, Compass, FileText, LogIn, Plus, Users } from "lucide-react";
 import { SidebarNavLink } from "@/components/molecules/sidebar-nav-link";
 import { routes } from "@/config/routes";
+import { cn } from "@/lib/utils";
+
+type SidebarProps = {
+  className?: string; // 바깥에서 모양 덧입히기 (폰 ☰ 메뉴 안에서 다시 쓸 때)
+};
 
 // 피그마 Components 판 "Sidebar" (폭 260px)
-export function Sidebar() {
+// 768px 이상: 왼쪽에 고정 · 폰: 숨기고 MobileHeader의 ☰ 메뉴 안에서 다시 써요
+export function Sidebar({ className }: SidebarProps) {
   return (
-    <aside className="sticky top-0 flex h-dvh w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-4 py-5">
+    <aside
+      className={cn(
+        "sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-4 py-5 md:flex",
+        className,
+      )}
+    >
       {/* 로고 */}
       <Link href={routes.studies} className="mb-6 flex items-center gap-3 px-1">
         <span className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
