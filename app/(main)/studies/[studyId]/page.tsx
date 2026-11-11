@@ -19,7 +19,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { routes } from "@/config/routes";
+import { getCurrentUser } from "@/lib/current-user";
 import { formatDate } from "@/lib/format-date";
+import { AuthorActions } from "./author-actions";
 
 // 탭 제목 · 카톡 미리보기 — 스터디마다 다르게
 export async function generateMetadata({
@@ -58,8 +60,12 @@ async function StudyDetail({
   // 정보 카드가 오늘 날짜(new Date)로 D-n을 계산해요.
   // cacheComponents에서는 "요청이 왔을 때만 실행"이라고 먼저 알려야 해요.
   await connection();
-  const study = await getStudyDetail(studyId);
+  const [study, me] = await Promise.all([
+    getStudyDetail(studyId),
+    getCurrentUser(),
+  ]);
   if (!study) notFound(); // 같은 폴더의 not-found.tsx가 대신 나와요
+  const isAuthor = me?.userId === study.authorId; // 내 글이면 [수정] · [삭제]
 
   const author = (
     <span className="font-mono font-bold text-foreground">
@@ -90,6 +96,7 @@ async function StudyDetail({
 
       <PageHeader
         className="border-b border-border pb-4"
+        action={isAuthor ? <AuthorActions studyId={study.id} /> : undefined}
         title={
           <>
             <span className="break-keep">{study.title}</span>{" "}

@@ -77,3 +77,52 @@ export async function getMyStudies(
     query: { page: Math.max(1, page) - 1, size },
   });
 }
+
+// 보내는 값 (CreateStudyRequest · UpdateStudyRequest) — 코드 값 · 숫자, 이름은 받을 때와 같게
+type StudyInput = Pick<
+  Study,
+  | "title"
+  | "category"
+  | "techTags"
+  | "maxMembers"
+  | "deadline"
+  | "mode"
+  | "content"
+>;
+
+// ③ 등록 — POST /api/v1/studies (작성자는 서버가 토큰으로)
+export async function createStudy(
+  token: string,
+  input: StudyInput,
+): Promise<ApiResponse<Study | null>> {
+  return apiRequest<Study>(apiPaths.study.create, {
+    method: "POST",
+    token,
+    body: input,
+  });
+}
+
+// ③ 수정 — PUT /api/v1/studies/{id} (스터디장만, 정원은 현재 인원보다 작게 못 바꿈 — 서버 규칙)
+export async function updateStudy(
+  token: string,
+  studyId: number,
+  input: StudyInput,
+): Promise<ApiResponse<Study | null>> {
+  return apiRequest<Study>(apiPaths.study.update(studyId), {
+    method: "PUT",
+    token,
+    body: input,
+  });
+}
+
+// ② 삭제 — DELETE /api/v1/studies/{id} (스터디장만)
+export async function deleteStudy(
+  token: string,
+  studyId: number,
+): Promise<ApiResponse<null>> {
+  const result = await apiRequest(apiPaths.study.remove(studyId), {
+    method: "DELETE",
+    token,
+  });
+  return { ...result, data: null };
+}

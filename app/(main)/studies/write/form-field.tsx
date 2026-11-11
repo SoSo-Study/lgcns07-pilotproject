@@ -1,24 +1,66 @@
-// app/(main)/studies/write/FormFields.tsx
+// app/(main)/studies/write/form-field.tsx — ③ 모집글 등록 · 수정 폼 (화면: sooahp님 #7)
+// API 연결(#46): 값은 코드 · 숫자로 보내고(#14 팀 결정), 서버 액션이 같은 규칙으로 다시 검사해요(#45 A4)
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { handleStudySubmitAction } from "./actions";
+import {
+  saveStudyAction,
+  type StudyWriteResult,
+} from "@/actions/study-write-actions";
+import { routes } from "@/config/routes";
+import { studyCategories } from "@/config/study-category";
+import { studyModeLabels } from "@/config/study-mode";
+import type { Study, StudyMode } from "@/types/study";
 
-export default function StudyWriteForm() {
+/** 수정할 때 폼을 채울 값 (등록이면 없음) */
+export type StudyFormInitial = Pick<
+  Study,
+  | "id"
+  | "title"
+  | "category"
+  | "techTags"
+  | "maxMembers"
+  | "deadline"
+  | "mode"
+  | "content"
+>;
+
+const MAX_TAGS = 5;
+const MAX_TAG_LENGTH = 20;
+const memberOptions = [2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+type FieldErrors = Extract<StudyWriteResult, { ok: false }>["errors"];
+
+export default function StudyWriteForm({
+  initial,
+}: {
+  initial?: StudyFormInitial;
+}) {
   const router = useRouter();
-  const [tags, setTags] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>(initial?.techTags ?? []);
   const [tagInput, setTagInput] = useState("");
-  const [mode, setMode] = useState("온라인");
-  const [deadline, setDeadline] = useState("");
-  const [dateType, setDateType] = useState<"text" | "date">("text");
-  const [description, setDescription] = useState("");
+  const [mode, setMode] = useState<StudyMode>(initial?.mode ?? "ONLINE");
+  const [deadline, setDeadline] = useState(initial?.deadline ?? "");
+  const [dateType, setDateType] = useState<"text" | "date">(
+    initial ? "date" : "text",
+  );
+  const [description, setDescription] = useState(initial?.content ?? "");
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      const trimmed = tagInput.trim();
-      if (trimmed && !tags.includes(trimmed)) {
+      const trimmed = tagInput.trim().slice(0, MAX_TAG_LENGTH);
+      // 쉼표는 태그를 이어 붙이는 기호라 빼요. 5개까지만 (서버 규칙과 같게)
+      if (
+        trimmed &&
+        !trimmed.includes(",") &&
+        !tags.includes(trimmed) &&
+        tags.length < MAX_TAGS
+      ) {
         setTags([...tags, trimmed]);
         setTagInput("");
       }
@@ -29,37 +71,44 @@ export default function StudyWriteForm() {
     setTags(tags.filter((t) => t !== tagToRemove));
   };
 
-  const onSubmitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmitHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget; // await 전에 미리 저장해야 합니다
-    const formData = new FormData(form);
+    const formData = new FormData(e.currentTarget);
 
-    try {
-      await handleStudySubmitAction(formData);
-      alert("🎉 모집글이 성공적으로 등록되었습니다!");
-
-      // 폼 초기화
-      form.reset(); // 제목, 분야, 모집 인원, 소개
-      setTags([]); // 태그를 처음 상태로
-      setTagInput("");
-      setMode("온라인");
-      setDeadline("");
-
-      setDateType("text"); // 날짜칸을 다시 "날짜 선택" 문구로
-
-      router.push("/studies");
-    } catch (error) {
-      alert("등록 중 오류가 발생했습니다. 다시 시도해 주세요.");
-    }
+    // 서버 액션: 검사 → 강사님 API 저장. 기다리는 동안 버튼이 잠겨요(연타 방지)
+    startTransition(async () => {
+      const result = await saveStudyAction(formData);
+      if (!result.ok) {
+        setErrors(result.errors ?? {});
+        setFormError(result.formError ?? null);
+        return;
+      }
+      setErrors({});
+      setFormError(null);
+      // 저장한 글의 상세로 (replace: 뒤로 가기로 폼에 다시 오지 않게)
+      router.replace(routes.study(result.studyId));
+      router.refresh();
+    });
   };
+
+  const errorList = [
+    errors?.title,
+    errors?.category,
+    errors?.maxMembers,
+    errors?.deadline,
+    errors?.techTags,
+    errors?.mode,
+    errors?.content,
+  ].filter(Boolean);
 
   return (
     <form
       onSubmit={onSubmitHandler}
       style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
     >
-      <input type="hidden" name="tags" value={tags.join(",")} />
+      <input type="hidden" name="techTags" value={tags.join(",")} />
       <input type="hidden" name="mode" value={mode} />
+      {initial && <input type="hidden" name="studyId" value={initial.id} />}
 
       {/* 스터디 제목 */}
       <div>
@@ -78,6 +127,8 @@ export default function StudyWriteForm() {
           name="title"
           type="text"
           required
+          maxLength={100}
+          defaultValue={initial?.title}
           className="study-input"
           placeholder="예) React 심화 스터디 — 서버 컴포넌트까지"
           style={{
@@ -115,7 +166,7 @@ export default function StudyWriteForm() {
           </label>
           <select
             name="category"
-            defaultValue=""
+            defaultValue={initial?.category ?? ""}
             required
             className="study-select"
             style={{
@@ -130,8 +181,12 @@ export default function StudyWriteForm() {
             <option value="" disabled hidden>
               분야 선택
             </option>
-            <option value="프론트엔드">프론트엔드</option>
-            <option value="백엔드">백엔드</option>
+            {/* 값은 코드(FRONTEND), 보이는 글자는 한국어 — config/study-category.ts 한 곳에서 */}
+            {Object.entries(studyCategories).map(([code, { label }]) => (
+              <option key={code} value={code}>
+                {label}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -149,8 +204,8 @@ export default function StudyWriteForm() {
             <span style={{ color: "var(--color-danger, #ef4444)" }}>*</span>
           </label>
           <select
-            name="capacity"
-            defaultValue=""
+            name="maxMembers"
+            defaultValue={initial?.maxMembers ?? ""}
             required
             className="study-select"
             style={{
@@ -165,9 +220,12 @@ export default function StudyWriteForm() {
             <option value="" disabled hidden>
               모집 인원 선택
             </option>
-            <option value="5명">5명</option>
-            <option value="4명">4명</option>
-            <option value="3명">3명</option>
+            {/* 값은 숫자(5), 스터디장 포함 2~10명 (서버 규칙과 같게) */}
+            {memberOptions.map((count) => (
+              <option key={count} value={count}>
+                {count}명
+              </option>
+            ))}
           </select>
         </div>
 
@@ -298,12 +356,13 @@ export default function StudyWriteForm() {
             border: "1px solid var(--border-color, #2d3142)",
           }}
         >
-          {["온라인", "오프라인", "온·오프 함께"].map((option) => {
+          {(Object.keys(studyModeLabels) as StudyMode[]).map((option) => {
             const isSelected = mode === option;
             return (
               <button
                 key={option}
                 type="button"
+                aria-pressed={isSelected}
                 onClick={() => setMode(option)}
                 style={{
                   padding: "0.5rem 1rem",
@@ -319,7 +378,7 @@ export default function StudyWriteForm() {
                   cursor: "pointer",
                 }}
               >
-                {option}
+                {studyModeLabels[option]}
               </button>
             );
           })}
@@ -339,7 +398,7 @@ export default function StudyWriteForm() {
           소개 <span style={{ color: "var(--color-danger, #ef4444)" }}>*</span>
         </label>
         <textarea
-          name="description"
+          name="content"
           required
           rows={6}
           value={description}
@@ -374,6 +433,21 @@ export default function StudyWriteForm() {
         </span>
       </div>
 
+      {/* 서버가 돌려준 문구 (검사 실패 · 저장 실패) */}
+      {(errorList.length > 0 || formError) && (
+        <div
+          role="alert"
+          className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+        >
+          <ul className="list-disc pl-4">
+            {errorList.map((message) => (
+              <li key={message}>{message}</li>
+            ))}
+            {formError && <li>{formError}</li>}
+          </ul>
+        </div>
+      )}
+
       {/* 하단 제어 바 */}
       <div
         style={{
@@ -384,6 +458,7 @@ export default function StudyWriteForm() {
       >
         <button
           type="submit"
+          disabled={isPending}
           style={{
             padding: "0.625rem 1.25rem",
             backgroundColor: "#238636",
@@ -394,7 +469,7 @@ export default function StudyWriteForm() {
             cursor: "pointer",
           }}
         >
-          등록하기
+          {isPending ? "저장 중…" : initial ? "수정하기" : "등록하기"}
         </button>
       </div>
     </form>
