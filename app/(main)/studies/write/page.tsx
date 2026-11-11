@@ -1,32 +1,34 @@
+// app/(main)/studies/write/page.tsx
 import { Suspense } from "react";
 import { PageHeader } from "@/components/templates/page-header";
-import { TodoBox } from "@/components/templates/todo-box";
 import { Skeleton } from "@/components/ui/skeleton";
+import FormFields from "./form-field";
 
-// 피그마 ③ 모집글 등록 · 수정 — 담당: 이슈 #7
-// 등록 = /studies/write, 수정 = /studies/write?studyId=3 (차이는 id 하나)
-export default function StudyWritePage({
-  searchParams,
-}: PageProps<"/studies/write">) {
+export default function StudyWritePage() {
   return (
-    <section>
+    <section
+      style={{
+        backgroundColor: "var(--bg-main, #12141c)",
+        minHeight: "100vh",
+        padding: "2rem",
+      }}
+    >
       <Suspense fallback={<Skeleton className="h-24 w-full" />}>
-        <StudyWrite searchParams={searchParams} />
+        <div style={{ maxWidth: "800px", color: "var(--text-main, #ffffff)" }}>
+          <PageHeader title="새 모집글 등록" />
+          <p
+            style={{
+              color: "var(--text-muted, #6b7280)",
+              fontSize: "0.875rem",
+              marginTop: "-1.5rem",
+              marginBottom: "2rem",
+            }}
+          >
+            새로운 스터디 그룹을 개설하고 함께 공부할 멤버를 모아보세요.
+          </p>
+          <FormFields />
+        </div>
       </Suspense>
     </section>
-  );
-}
-
-async function StudyWrite({
-  searchParams,
-}: Pick<PageProps<"/studies/write">, "searchParams">) {
-  const { studyId } = await searchParams;
-  const isEdit = typeof studyId === "string";
-
-  return (
-    <>
-      <PageHeader title={isEdit ? "모집글 수정" : "모집글 등록"} />
-      <TodoBox issue={7}>모집글 입력 폼이 들어갈 자리예요.</TodoBox>
-    </>
   );
 }
