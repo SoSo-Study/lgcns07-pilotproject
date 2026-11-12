@@ -2,6 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { env } from "@/lib/env";
+import {
+  RESET_FAILED_MESSAGE,
+  RESET_SENT_MESSAGE,
+  RESET_TOO_MANY_MESSAGE,
+} from "@/config/password-reset-limit";
 import { routes } from "@/config/routes";
 import { getCurrentUser } from "@/lib/current-user";
 import {
@@ -10,11 +15,14 @@ import {
   markEmailVerified,
 } from "@/lib/email-verified-cookie";
 import { fieldErrors } from "@/lib/field-errors";
+import { allowResetRequest } from "@/lib/password-reset-requests";
 import {
   emailCodeField,
   emailField,
   findIdSchema,
   type FindIdValues,
+  passwordResetSchema,
+  type PasswordResetValues,
   signupSchema,
   type SignupValues,
 } from "@/schema/auth-schema";
@@ -22,6 +30,8 @@ import {
   EMAIL_CODE_TTL_SECONDS,
   findLoginId,
   registerUser,
+  requestPasswordReset,
+  resetPassword,
   sendEmailCode,
   verifyEmailCode,
 } from "@/service/auth-service";
@@ -157,4 +167,73 @@ export async function findIdAction(
     return { formError: response.message };
   }
   return { result: response.data };
+}
+
+// ── 비밀번호 찾기 · 다시 만들기 ──
+
+export type RequestPasswordResetResult =
+  | { ok: true; message: string; demoToken?: string }
+  | { ok: false; message: string };
+
+// [보안키 받기] — 가입한 이메일이든 아니든 같은 문구로 답해요 (가입 여부가 새지 않게)
+export async function requestPasswordResetAction(
+  email: string,
+): Promise<RequestPasswordResetResult> {
+  const parsed = emailField.safeParse(email);
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0].message };
+  }
+
+  // 🔒 같은 이메일로 10분에 3번까지만 — 넘으면 강사님 API를 부르지도 않아요
+  if (!allowResetRequest(parsed.data)) {
+    return { ok: false, message: RESET_TOO_MANY_MESSAGE };
+  }
+
+  const response = await requestPasswordReset(parsed.data);
+  if (!response.success) {
+    return { ok: false, message: response.message };
+  }
+  return {
+    ok: true,
+    message: RESET_SENT_MESSAGE,
+    // 🧪 테스트 서버의 시연용 보안키 — SHOW_DEMO_CODE=true일 때만 화면으로 (실서비스에선 꺼 두기)
+    demoToken: env.showDemoCode ? response.data?.demoToken : undefined,
+  };
+}
+
+export type ResetPasswordState = {
+  errors?: Partial<Record<keyof PasswordResetValues, string>>;
+  formError?: string;
+};
+
+// [비밀번호 바꾸기] — <form action={…}> + useActionState로 불러요
+export async function resetPasswordAction(
+  _previous: ResetPasswordState,
+  formData: FormData,
+): Promise<ResetPasswordState> {
+  const parsed = passwordResetSchema.safeParse({
+    email: String(formData.get("email") ?? ""),
+    token: String(formData.get("token") ?? ""),
+    password: String(formData.get("password") ?? ""),
+    passwordConfirm: String(formData.get("passwordConfirm") ?? ""),
+  });
+  if (!parsed.success) {
+    return { errors: fieldErrors(parsed.error) };
+  }
+
+  const response = await resetPassword({
+    email: parsed.data.email,
+    token: parsed.data.token,
+    newPassword: parsed.data.password, // API 이름은 newPassword
+  });
+  if (!response.success) {
+    // 연결 문제면 그 안내를, 서버가 거절했으면(보안키가 틀림 · 만료 · 이미 씀) 우리 문구로
+    const connectionProblem =
+      response.code === "NETWORK_ERROR" || response.code === "BAD_RESPONSE";
+    return {
+      formError: connectionProblem ? response.message : RESET_FAILED_MESSAGE,
+    };
+  }
+
+  redirect(routes.loginNotice("password-reset")); // 로그인 화면에 "비밀번호를 바꿨어요"
 }
