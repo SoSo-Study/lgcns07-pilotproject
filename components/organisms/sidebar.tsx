@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { CodeXml, Compass, FileText, LogIn, Plus, Users } from "lucide-react";
+import { Compass, FileText, Plus, Users } from "lucide-react";
+import { Logo } from "@/components/atoms/logo";
 import { SidebarNavLink } from "@/components/molecules/sidebar-nav-link";
+import { SidebarAccount } from "@/components/organisms/sidebar-account";
+import { Skeleton } from "@/components/ui/skeleton";
 import { routes } from "@/config/routes";
 import { cn } from "@/lib/utils";
 
@@ -21,9 +24,7 @@ export function Sidebar({ className }: SidebarProps) {
     >
       {/* 로고 */}
       <Link href={routes.studies} className="mb-6 flex items-center gap-3 px-1">
-        <span className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-          <CodeXml className="size-5" aria-hidden />
-        </span>
+        <Logo />
         <span className="flex flex-col">
           <span className="font-mono text-sm font-bold">soso.study</span>
           <span className="text-xs text-muted-foreground">
@@ -62,15 +63,11 @@ export function Sidebar({ className }: SidebarProps) {
         </Suspense>
       </nav>
 
-      {/* 아래쪽 사용자 자리 — 로그인 담당(#4)이 "내 이름 + 로그아웃"으로 바꿔요 */}
+      {/* 아래쪽 사용자 자리 — 로그인했으면 "내 이름 + 로그아웃", 아니면 "로그인" (#4) */}
       <div className="mt-auto border-t border-sidebar-border pt-4">
-        <Link
-          href={routes.login}
-          className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-        >
-          <LogIn className="size-4" aria-hidden />
-          로그인
-        </Link>
+        <Suspense fallback={<Skeleton className="h-8 w-full" />}>
+          <SidebarAccount />
+        </Suspense>
       </div>
     </aside>
   );

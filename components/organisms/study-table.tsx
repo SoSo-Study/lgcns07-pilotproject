@@ -55,7 +55,7 @@ export function StudyTable({
       ) : (
         <ul>
           {studies.map((study) => (
-            <StudyRow key={study.studyId} study={study} />
+            <StudyRow key={study.id} study={study} />
           ))}
         </ul>
       )}

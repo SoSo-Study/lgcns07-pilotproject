@@ -6,10 +6,12 @@ import { CategoryChip } from "@/components/molecules/category-chip";
 import { Pagination } from "@/components/molecules/pagination";
 import { SearchForm } from "@/components/molecules/search-form";
 import { StudyTable } from "@/components/organisms/study-table";
+import { TerminalBanner } from "@/components/organisms/terminal-banner";
 import { EmptyState } from "@/components/templates/empty-state";
 import { PageHeader } from "@/components/templates/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { bannerSlides } from "@/config/banner-slides";
 import { routes } from "@/config/routes";
 import { studiesHref } from "@/lib/studies-href";
 import { cn } from "@/lib/utils";
@@ -45,6 +47,7 @@ export default function StudiesPage({ searchParams }: PageProps<"/studies">) {
           </Link>
         }
       />
+      <TerminalBanner slides={bannerSlides} className="mb-4" />
       <Suspense fallback={<StudyListSkeleton />}>
         <StudyList searchParams={searchParams} />
       </Suspense>
@@ -62,7 +65,7 @@ async function StudyList({
   // 2. 그 조건으로 목록 가져오기 (화면 → 액션 → 서비스)
   const result = await loadStudyList(query);
 
-  if (!result.success) {
+  if (!result.success || !result.data) {
     return (
       <p role="alert" className="text-sm text-destructive">
         {result.message}
@@ -70,9 +73,9 @@ async function StudyList({
     );
   }
 
-  const { studies, currentPage, totalPages, openCount, closedCount } =
-    result.data;
+  const { items: studies, totalPages, openCount, closedCount } = result.data;
   const { categoryCounts } = result.data;
+  const currentPage = result.data.page + 1; // API는 0부터, 화면 · 주소는 1부터
   const hasFilter = q !== "" || category !== undefined;
 
   return (

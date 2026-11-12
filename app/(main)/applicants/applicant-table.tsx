@@ -49,21 +49,16 @@ export function ApplicantTable({ applications, isFull }: ApplicantTableProps) {
         </thead>
         <tbody>
           {sorted.map((application) => (
-            <tr
-              key={application.applicationId}
-              className="border-t border-border"
-            >
+            <tr key={application.id} className="border-t border-border">
               <td className="px-4 py-3">
                 <span className="flex items-center gap-2">
                   <span
                     aria-hidden
                     className="flex size-6 items-center justify-center rounded-full bg-link-subtle font-mono text-xs font-bold text-link"
                   >
-                    {application.applicantNickname.charAt(0).toUpperCase()}
+                    {application.applicantName.charAt(0).toUpperCase()}
                   </span>
-                  <span className="font-mono">
-                    {application.applicantNickname}
-                  </span>
+                  <span className="font-mono">{application.applicantName}</span>
                 </span>
               </td>
               <td className="px-4 py-3 text-muted-foreground">
@@ -104,9 +99,6 @@ function StatusCell({
   }
 
   return (
-    <DecisionButtons
-      applicationId={application.applicationId}
-      canApprove={!isFull}
-    />
+    <DecisionButtons applicationId={application.id} canApprove={!isFull} />
   );
 }

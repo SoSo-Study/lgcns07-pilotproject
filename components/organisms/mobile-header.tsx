@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CodeXml } from "lucide-react";
+import { Logo } from "@/components/atoms/logo";
 import { MobileMenu } from "@/components/organisms/mobile-menu";
 import { Sidebar } from "@/components/organisms/sidebar";
 import { routes } from "@/config/routes";
@@ -10,9 +10,7 @@ export function MobileHeader() {
     <header className="sticky top-0 z-40 flex items-center justify-between border-b border-sidebar-border bg-sidebar px-4 py-3 md:hidden">
       {/* 로고 — 사이드바 로고와 같은 모양 */}
       <Link href={routes.studies} className="flex items-center gap-2">
-        <span className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-          <CodeXml className="size-5" aria-hidden />
-        </span>
+        <Logo />
         <span className="font-mono text-sm font-bold">soso.study</span>
       </Link>
 

@@ -2,15 +2,45 @@
 
 import { revalidatePath } from "next/cache";
 import { routes } from "@/config/routes";
-import { decideApplicationSchema } from "@/schema/application-schema";
+import { getServerAuth } from "@/lib/auth-session";
 import {
+  applySchema,
+  decideApplicationSchema,
+} from "@/schema/application-schema";
+import { cancelApplicationSchema } from "@/schema/profile-schema";
+import {
+  applyToStudy,
+  cancelMyApplication,
   decideApplication,
   getApplicationsByStudy,
 } from "@/service/application-service";
+import { findStudy } from "@/service/study-service";
 
 // 스터디 하나에 들어온 신청 목록 불러오기 (화면 → 여기 → service)
+// 🔒 여러 겹 확인 (#45 B6): 로그인했는지 → 내 스터디인지(authorId = 내 userId) → 서버도 한 번 더(403)
 export async function getApplicationsAction(studyId: number) {
-  return getApplicationsByStudy(studyId);
+  const auth = await getServerAuth();
+  if (!auth) {
+    return {
+      success: false,
+      code: "UNAUTHORIZED",
+      message: "로그인이 필요해요.",
+      data: [],
+    };
+  }
+
+  const study = await findStudy(String(studyId), auth.accessToken);
+  if (!study || study.authorId !== auth.userId) {
+    return {
+      success: false,
+      code: "FORBIDDEN",
+      message: "스터디장만 신청자를 관리할 수 있어요.",
+      data: [],
+    };
+  }
+
+  const result = await getApplicationsByStudy(auth.accessToken, studyId);
+  return { ...result, data: result.data ?? [] };
 }
 
 // 승인 · 거절 결과를 화면에 돌려주는 모양
@@ -20,7 +50,6 @@ export type DecideState = { message: string } | null;
 // [승인] · [거절] 버튼을 누르면 서버에서 실행되는 함수
 // 흐름: 화면(폼) → 여기(검사) → service(요청) → 강사님 API
 // useActionState로 부르기 때문에 첫 번째 값은 "직전 결과"(여기선 안 써요)
-// TODO(로그인 #4 이후): 지금 로그인한 사람이 이 스터디의 스터디장인지 확인하기
 export async function decideApplicationAction(
   _prevState: DecideState,
   formData: FormData,
@@ -30,23 +59,94 @@ export async function decideApplicationAction(
     applicationId: formData.get("applicationId"),
     decision: formData.get("decision"),
   });
-
   if (!parsed.success) {
     return { message: "잘못된 요청이에요. 새로고침 후 다시 시도해 주세요." };
   }
 
-  // 2. service에 처리 요청
+  // 2. 🔒 로그인 확인 — 스터디장인지 · 이미 처리됐는지 · 자리가 찼는지는 서버가 막아요(403 · 409)
+  const auth = await getServerAuth();
+  if (!auth) return { message: "로그인이 필요해요." };
+
+  // 3. service에 처리 요청
   const result = await decideApplication(
+    auth.accessToken,
     parsed.data.applicationId,
     parsed.data.decision,
   );
 
-  // 3. 실패하면 서버가 준 문구를 그대로 화면에 (예: "이미 처리된 신청이에요.")
+  // 4. 실패하면 서버가 준 문구를 그대로 화면에 (예: "이미 처리된 신청이에요.")
   if (!result.success) {
     return { message: result.message };
   }
 
-  // 4. 성공하면 화면을 최신 상태로 다시 그리기 (숫자 카드 · 표가 같이 바뀌어요)
+  // 5. 성공하면 화면을 최신 상태로 다시 그리기 (숫자 카드 · 표 · 남은 자리가 같이 바뀌어요)
   revalidatePath(routes.applicants);
+  return null;
+}
+
+// ── ② 상세 화면: 참여 신청 · 신청 취소 (#8) ──
+
+// 신청 · 취소 결과를 화면에 돌려주는 모양 (성공이면 null, 실패면 보여 줄 문구)
+export type ApplyState = { message: string } | null;
+
+// [참여 신청하기] — 한 줄 소개와 함께 신청
+// 🔒 "누가" 신청하는지는 토큰으로 서버가 정해요. 내 id를 폼으로 받지 않아요
+export async function applyAction(
+  _prevState: ApplyState,
+  formData: FormData,
+): Promise<ApplyState> {
+  // 1. 폼 값 검사 (화면과 같은 규칙: 한 줄 소개 1~50자)
+  const parsed = applySchema.safeParse({
+    studyId: formData.get("studyId"),
+    message: String(formData.get("message") ?? ""),
+  });
+  if (!parsed.success) {
+    return {
+      message: parsed.error.issues[0]?.message ?? "입력값을 확인해 주세요.",
+    };
+  }
+
+  // 2. 🔒 로그인 확인
+  const auth = await getServerAuth();
+  if (!auth) return { message: "로그인이 필요해요." };
+
+  // 3. 신청 — 중복 · 자리 없음 · 마감 · 내 글은 서버가 막고 이유를 message로 줘요
+  const result = await applyToStudy(
+    auth.accessToken,
+    parsed.data.studyId,
+    parsed.data.message,
+  );
+  if (!result.success) return { message: result.message };
+
+  // 4. 상세 화면을 다시 그리면 myApplicationStatus가 PENDING으로 와서 [신청 취소]로 바뀌어요
+  revalidatePath(routes.study(parsed.data.studyId));
+  return null;
+}
+
+// [신청 취소] · [참여 취소] — 대기 중 · 승인된 뒤 모두 가능 (#8 11/11 결정)
+// 승인된 뒤 취소하면 서버가 인원 -1, 마감일 전이면 다시 모집 중으로 바꿔요
+export async function cancelFromDetailAction(
+  _prevState: ApplyState,
+  formData: FormData,
+): Promise<ApplyState> {
+  const parsed = cancelApplicationSchema.safeParse({
+    studyId: formData.get("studyId"),
+  });
+  if (!parsed.success) {
+    return { message: "잘못된 요청이에요. 새로고침 후 다시 시도해 주세요." };
+  }
+
+  const auth = await getServerAuth();
+  if (!auth) return { message: "로그인이 필요해요." };
+
+  const result = await cancelMyApplication(
+    auth.accessToken,
+    parsed.data.studyId,
+  );
+  if (!result.success) return { message: result.message };
+
+  // 상세 화면(인원 · 버튼)과 ⑧ 프로필의 "신청한 스터디" 둘 다 다시 그려요
+  revalidatePath(routes.study(parsed.data.studyId));
+  revalidatePath(routes.profile);
   return null;
 }

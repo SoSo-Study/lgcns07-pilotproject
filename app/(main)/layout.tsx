@@ -8,7 +8,7 @@ export default function MainLayout({ children }: LayoutProps<"/">) {
     <div className="flex min-h-dvh flex-col md:flex-row">
       <MobileHeader />
       <Sidebar />
-      <main className="mx-auto w-full max-w-6xl min-w-0 flex-1 px-4 py-8 md:px-8">
+      <main className="mx-auto flex w-full max-w-6xl min-w-0 flex-1 flex-col px-4 py-8 md:px-8">
         {children}
       </main>
     </div>

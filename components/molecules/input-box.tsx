@@ -8,7 +8,8 @@ import {
 import { cn } from "@/lib/utils";
 
 // 높이만 고르고, 너비는 부모나 className이 정해요
-const inputBoxVariants = cva("bg-inset dark:bg-inset", {
+// text-foreground: 에러일 때 묶음(Field)이 글자를 빨갛게 해도, 입력한 글자는 원래 색
+const inputBoxVariants = cva("bg-inset text-foreground dark:bg-inset", {
   variants: {
     size: {
       sm: "h-8",
