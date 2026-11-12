@@ -7,8 +7,7 @@ import {
 } from "@/actions/study-social-actions";
 import { SubmitButton } from "@/components/atoms/submit-button";
 import { Textarea } from "@/components/ui/textarea";
-
-const MAX_LENGTH = 2000;
+import { COMMENT_MAX } from "@/schema/comment-schema";
 
 // 피그마 ② 댓글 입력칸 + [댓글 남기기] (#11)
 // 폼 하나에 서버 액션 하나 (폼 안에 폼 X) · 보내는 동안 버튼 잠금(연타 방지) · 성공하면 칸 비우기
@@ -33,7 +32,7 @@ export function CommentForm({ studyId }: { studyId: number }) {
         id="comment"
         name="content"
         required
-        maxLength={MAX_LENGTH}
+        maxLength={COMMENT_MAX}
         rows={3}
         placeholder="궁금한 점을 남겨 주세요"
         className="bg-inset dark:bg-inset"
