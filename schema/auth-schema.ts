@@ -68,5 +68,18 @@ export const signupSchema = z
     when: (payload) => passwordPair.safeParse(payload.value).success,
   });
 
+/**
+ * 이메일 찾기 폼 — 닉네임으로 찾아요.
+ * 찾기에서는 "비었는지 · 너무 길지 않은지"만 봐요. 가입 규칙(2~20자)이 바뀌기 전 가입자도 찾을 수 있게요.
+ */
+export const findIdSchema = z.object({
+  nickname: z
+    .string()
+    .trim()
+    .min(1, "닉네임을 입력해 주세요")
+    .max(80, "닉네임은 80자까지 쓸 수 있어요"),
+});
+
 export type LoginValues = z.infer<typeof loginSchema>;
+export type FindIdValues = z.infer<typeof findIdSchema>;
 export type SignupValues = z.infer<typeof signupSchema>;

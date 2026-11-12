@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SignupForm } from "@/components/organisms/signup-form";
 import { AuthCard } from "@/components/templates/auth-card";
+import { ResetOnLeave } from "@/components/templates/reset-on-leave";
 import { routes } from "@/config/routes";
 
 // 피그마 ⑥ 회원가입 — 담당: 이슈 #3
@@ -23,7 +24,10 @@ export default function SignupPage() {
         </div>
       }
     >
-      <SignupForm />
+      {/* 🔒 화면을 떠나면 입력한 이메일 · 비밀번호를 지워요 */}
+      <ResetOnLeave>
+        <SignupForm />
+      </ResetOnLeave>
     </AuthCard>
   );
 }

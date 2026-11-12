@@ -13,11 +13,14 @@ import { fieldErrors } from "@/lib/field-errors";
 import {
   emailCodeField,
   emailField,
+  findIdSchema,
+  type FindIdValues,
   signupSchema,
   type SignupValues,
 } from "@/schema/auth-schema";
 import {
   EMAIL_CODE_TTL_SECONDS,
+  findLoginId,
   registerUser,
   sendEmailCode,
   verifyEmailCode,
@@ -126,4 +129,32 @@ export async function signupAction(
 
   await clearEmailVerified(); // 다 썼으니 지우기
   redirect(routes.loginNotice("signed-up")); // 가입 → 로그인 화면에 "가입했어요"
+}
+
+// ── 이메일 찾기 ──
+
+export type FindIdState = {
+  errors?: Partial<Record<keyof FindIdValues, string>>;
+  formError?: string;
+  /** 찾은 결과 — 🔒 가려진 이메일만 */
+  result?: { maskedEmails: string[] };
+};
+
+// [이메일 찾기] — <form action={…}> + useActionState로 불러요
+export async function findIdAction(
+  _previous: FindIdState,
+  formData: FormData,
+): Promise<FindIdState> {
+  const parsed = findIdSchema.safeParse({
+    nickname: String(formData.get("nickname") ?? ""),
+  });
+  if (!parsed.success) {
+    return { errors: fieldErrors(parsed.error) };
+  }
+
+  const response = await findLoginId(parsed.data.nickname); // API 이름은 name
+  if (!response.success || !response.data) {
+    return { formError: response.message };
+  }
+  return { result: response.data };
 }
