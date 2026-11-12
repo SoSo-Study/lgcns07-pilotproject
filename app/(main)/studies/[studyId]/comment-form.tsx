@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState } from "react";
 import {
   addCommentAction,
   type CommentState,
@@ -10,20 +10,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { COMMENT_MAX } from "@/schema/comment-schema";
 
 // 피그마 ② 댓글 입력칸 + [댓글 남기기] (#11)
-// 폼 하나에 서버 액션 하나 (폼 안에 폼 X) · 보내는 동안 버튼 잠금(연타 방지) · 성공하면 칸 비우기
+// 폼 하나에 서버 액션 하나 (폼 안에 폼 X) · 보내는 동안 버튼 잠금(연타 방지)
+// 칸 비우기는 React가 해요 — <form action>이 끝나면 비제어 칸을 스스로 비워서 ref · reset()이 필요 없어요
 export function CommentForm({ studyId }: { studyId: number }) {
-  const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction] = useActionState<CommentState, FormData>(
-    async (prev, formData) => {
-      const result = await addCommentAction(prev, formData);
-      if (result.ok) formRef.current?.reset();
-      return result;
-    },
+    addCommentAction,
     {},
   );
 
   return (
-    <form ref={formRef} action={formAction} className="flex flex-col gap-2">
+    <form action={formAction} className="flex flex-col gap-2">
       <input type="hidden" name="studyId" value={studyId} />
       <label htmlFor="comment" className="sr-only">
         댓글
