@@ -23,7 +23,7 @@ export async function getApplicationsAction(studyId: number) {
     };
   }
 
-  const study = await findStudy(String(studyId));
+  const study = await findStudy(String(studyId), auth.accessToken);
   if (!study || study.authorId !== auth.userId) {
     return {
       success: false,

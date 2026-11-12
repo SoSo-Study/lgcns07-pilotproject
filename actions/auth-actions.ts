@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { env } from "@/lib/env";
 import { routes } from "@/config/routes";
 import { getCurrentUser } from "@/lib/current-user";
 import {
@@ -54,7 +55,8 @@ export async function sendEmailCodeAction(
     ok: true,
     message: response.message,
     ttlSeconds: EMAIL_CODE_TTL_SECONDS,
-    demoCode: response.data?.demoCode, // 🧪 테스트 서버에서만 와요
+    // 🧪 테스트 서버의 시연용 번호 — SHOW_DEMO_CODE=true일 때만 화면으로 (실서비스에선 꺼 두기)
+    demoCode: env.showDemoCode ? response.data?.demoCode : undefined,
   };
 }
 

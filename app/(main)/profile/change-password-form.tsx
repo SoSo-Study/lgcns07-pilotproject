@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   changePasswordAction,
@@ -18,22 +18,27 @@ import { requestLogout } from "@/lib/logout-request";
 // 🔒 비밀번호는 폼 → 서버 액션(POST 바디)으로만. 돌려주는 상태 · 주소 · 로그에 남기지 않아요 (#45 C1)
 export function ChangePasswordForm() {
   const router = useRouter();
-  const [state, formAction] = useActionState<ChangePasswordState, FormData>(
-    changePasswordAction,
-    {},
-  );
+  const [state, setState] = useState<ChangePasswordState>({});
+  const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (!state.ok) return;
-    requestLogout().then(() => {
+  // 흐름은 "버튼을 누른 그 처리 안에서" 이어요 — 바꾸기 → 성공이면 로그아웃 → 로그인 화면
+  // (결과를 보고 useEffect로 다음 일을 시키지 않아요 — React 문서 "Effect가 필요 없을 수도")
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    startTransition(async () => {
+      const result = await changePasswordAction({}, formData);
+      setState(result);
+      if (!result.ok) return;
+      await requestLogout();
       router.replace(routes.loginNotice("password-reset"));
       router.refresh();
     });
-  }, [state.ok, router]);
+  }
 
   return (
     <form
-      action={formAction}
+      onSubmit={handleSubmit}
       className="flex max-w-md flex-col gap-4 rounded-md border border-border bg-card p-5"
     >
       <FormField
@@ -83,7 +88,11 @@ export function ChangePasswordForm() {
         </FormAlert>
       )}
 
-      <SubmitButton pendingText="바꾸는 중…" className="w-full">
+      <SubmitButton
+        pending={isPending}
+        pendingText="바꾸는 중…"
+        className="w-full"
+      >
         비밀번호 바꾸기
       </SubmitButton>
       <p className="text-xs text-muted-foreground">

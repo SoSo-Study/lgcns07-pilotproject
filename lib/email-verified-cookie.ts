@@ -1,6 +1,7 @@
 import "server-only";
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, hkdfSync, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+import { env } from "@/lib/env";
 import { EMAIL_CODE_TTL_SECONDS } from "@/service/auth-service";
 
 // "이 이메일은 방금 인증을 마쳤어요" 표시 (#45 C3)
@@ -10,10 +11,17 @@ import { EMAIL_CODE_TTL_SECONDS } from "@/service/auth-service";
 // - httpOnly(화면 코드가 못 읽음) · sameSite lax · 배포에선 secure · 10분
 const COOKIE_NAME = "soso-email-verified";
 
+// 🔒 키 나누기: 로그인 쿠키를 암호화하는 NEXTAUTH_SECRET을 그대로 쓰지 않고,
+// 그 값에서 "이메일 인증 전용 키"를 따로 뽑아 써요(HKDF). 한 키가 여러 일을 하지 않게 (강의 S7 지적)
+// 새 환경 변수를 만들지 않아도 돼서 팀원 · Vercel 설정은 그대로예요
+function verifyKey() {
+  return Buffer.from(
+    hkdfSync("sha256", env.nextAuthSecret, "", "soso-email-verified", 32),
+  );
+}
+
 function sign(email: string) {
-  const secret = process.env.NEXTAUTH_SECRET;
-  if (!secret) throw new Error("환경 변수 NEXTAUTH_SECRET이(가) 없어요.");
-  return createHmac("sha256", secret)
+  return createHmac("sha256", verifyKey())
     .update(`email-verified:${email.toLowerCase()}`)
     .digest("base64url");
 }

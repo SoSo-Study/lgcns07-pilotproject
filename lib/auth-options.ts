@@ -1,17 +1,9 @@
 import "server-only";
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { apiPaths } from "@/config/api-paths";
 import { LOGIN_LOCKED_CODE } from "@/config/login-limit";
 import { routes } from "@/config/routes";
-import { apiRequest } from "@/lib/api-client";
-import {
-  attemptKey,
-  clearFailures,
-  lockedFor,
-  recordFailure,
-} from "@/lib/login-attempts";
-import { loginSchema } from "@/schema/auth-schema";
+import { loginWithCredentials, logoutOnServer } from "@/actions/auth-login";
 
 /** 요청한 사람의 IP (Vercel · 프록시 뒤에서는 x-forwarded-for의 첫 번째 값) */
 function clientIp(headers: Record<string, unknown> | undefined) {
@@ -32,17 +24,6 @@ function clientIp(headers: Record<string, unknown> | undefined) {
 /** 백엔드가 expiresIn을 안 주면 쓸 기본값 (2시간, 강의 예시) */
 const DEFAULT_EXPIRES_IN_SECONDS = 60 * 60 * 2;
 
-/** 강사님 로그인 응답 data (스웨거 AuthResponse) */
-type AuthResponse = {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number; // 초
-  tokenType: string;
-  userId: number;
-  email: string;
-  name: string;
-};
-
 export const authOptions: NextAuthOptions = {
   pages: { signIn: routes.login }, // NextAuth 기본 화면 대신 우리 ⑤ 로그인 화면
   session: { strategy: "jwt", maxAge: DEFAULT_EXPIRES_IN_SECONDS },
@@ -53,38 +34,15 @@ export const authOptions: NextAuthOptions = {
         email: { label: "이메일", type: "email" },
         password: { label: "비밀번호", type: "password" },
       },
-      // 🔒 화면 검사와 같은 규칙으로 서버에서 한 번 더 (#45 A4)
+      // 설정에는 분기를 늘어놓지 않고, 액션 층에 맡겨 결과만 받아요 (강의 P1-11)
       async authorize(credentials, req) {
-        const parsed = loginSchema.safeParse(credentials);
-        if (!parsed.success) return null;
-
-        // 🔒 로그인 잠금 (#53) — 10분 안에 5번 틀리면 5분 동안 막아요 (서버에서 세요)
-        // 잠겼으면 강사님 API를 부르지도 않아요. 없는 이메일이어도 똑같이 막혀서 가입 여부가 새지 않아요
-        const key = attemptKey(clientIp(req?.headers), parsed.data.email);
-        if (lockedFor(key) > 0) throw new Error(LOGIN_LOCKED_CODE);
-
-        const result = await apiRequest<AuthResponse>(apiPaths.auth.login, {
-          method: "POST",
-          body: parsed.data,
-        });
-
-        if (!result.success || !result.data?.accessToken) {
-          // 서버가 "틀렸다"고 답한 경우만 세요 (서버 연결 실패 · 서버 오류는 내 잘못이 아니라서 안 셈)
-          if (result.status >= 400 && result.status < 500) recordFailure(key);
-          if (lockedFor(key) > 0) throw new Error(LOGIN_LOCKED_CODE); // 방금 5번째였으면 바로 안내
-          return null; // 실패 이유는 하나로
-        }
-
-        clearFailures(key); // 성공하면 틀린 횟수를 처음부터
-        const data = result.data;
-        return {
-          id: String(data.userId),
-          name: data.name,
-          email: data.email,
-          accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
-          expiresIn: data.expiresIn,
-        };
+        const result = await loginWithCredentials(
+          credentials,
+          clientIp(req?.headers),
+        );
+        if (result.ok) return result.user;
+        if (result.locked) throw new Error(LOGIN_LOCKED_CODE); // 화면이 잠금 문구로 바꿔요
+        return null; // 실패 이유는 하나로
       },
     }),
   ],
@@ -114,12 +72,7 @@ export const authOptions: NextAuthOptions = {
     // 로그아웃 = 쿠키 지우기 + 강사님 서버에서도 토큰 무효화 (#45 B4)
     // 쿠키만 지우면 훔친 토큰은 만료 전까지 계속 쓸 수 있어요
     async signOut({ token }) {
-      if (token?.accessToken) {
-        await apiRequest(apiPaths.auth.logout, {
-          method: "POST",
-          token: token.accessToken,
-        });
-      }
+      await logoutOnServer(token?.accessToken);
     },
   },
 };

@@ -1,5 +1,6 @@
 import { apiPaths } from "@/config/api-paths";
-import { apiRequest } from "@/lib/api-client";
+import { apiRequest, type ApiResult } from "@/lib/api-client";
+import type { AuthResponse, MyAccount } from "@/types/auth";
 import type { ApiResponse } from "@/types/api-response";
 
 // 회원가입 · 이메일 인증 API를 부르는 곳 (강사님 테스트 서버 /api/v1/auth/…) — #3
@@ -55,15 +56,6 @@ export async function registerUser(input: {
   };
 }
 
-/** 내 정보 — GET /auth/me 응답 중 화면에 쓰는 것만 (토큰 값은 안 꺼내요) */
-export type MyAccount = {
-  userId: number;
-  email: string;
-  name: string;
-  role?: string;
-  statusMessage?: string | null;
-};
-
 // 내 정보 — GET /api/v1/auth/me (⑧ 프로필)
 export async function getMyAccount(
   token: string,
@@ -87,6 +79,27 @@ export async function changeMyPassword(
     method: "POST",
     token,
     body: input,
+  });
+  return { ...result, data: null };
+}
+
+// 로그인 — POST /api/v1/auth/login { email, password }
+// 응답에 토큰이 와요 → 이 결과는 NextAuth(서버)만 받아서 암호화 쿠키에 넣어요. 화면으로 보내지 않아요
+export async function loginWithPassword(input: {
+  email: string;
+  password: string;
+}): Promise<ApiResult<AuthResponse>> {
+  return apiRequest<AuthResponse>(apiPaths.auth.login, {
+    method: "POST",
+    body: input,
+  });
+}
+
+// 로그아웃 — POST /api/v1/auth/logout (Bearer) → 강사님 서버에서 토큰 무효화
+export async function logoutSession(token: string): Promise<ApiResponse<null>> {
+  const result = await apiRequest(apiPaths.auth.logout, {
+    method: "POST",
+    token,
   });
   return { ...result, data: null };
 }

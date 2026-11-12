@@ -17,7 +17,8 @@ export async function loadStudyList(query: StudyListQuery = {}) {
 
 // 스터디 하나 입구 — 상세 #6
 export async function getStudyDetail(studyId: string) {
-  return findStudy(studyId);
+  // 토큰은 액션이 꺼내서 서비스에 넘겨요 (서비스는 쿠키를 모름)
+  return findStudy(studyId, await getAccessToken());
 }
 
 // 내 모집글 입구 — #13 (⑦) · 신청자 관리 스터디 고르기 (④)

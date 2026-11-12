@@ -1,8 +1,7 @@
 import { Suspense } from "react";
 import { PageHeader } from "@/components/templates/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getServerAuth } from "@/lib/auth-session";
-import { findStudy } from "@/service/study-service";
+import { loadStudyForEdit } from "@/actions/study-write-actions";
 import FormFields from "./form-field";
 
 // ③ 모집글 등록 · 수정 — 수정은 주소로: /studies/write?studyId=3 (routes.studyEdit)
@@ -36,21 +35,19 @@ async function StudyWrite({
     );
   }
 
-  // 수정 — 내 글일 때만 폼을 채워서 보여 줘요
-  const [auth, study] = await Promise.all([
-    getServerAuth(),
-    findStudy(studyId),
-  ]);
-  if (!study || !auth || study.authorId !== auth.userId) {
+  // 수정 — 내 글일 때만 폼을 채워서 보여 줘요 (화면 → 액션 → 서비스)
+  const result = await loadStudyForEdit(studyId);
+  if (!result.ok) {
     return (
       <section>
         <PageHeader title="모집글 수정" />
         <p role="alert" className="text-sm text-destructive">
-          스터디장만 수정할 수 있어요. 없는 글이거나 내 글이 아니에요.
+          {result.message}
         </p>
       </section>
     );
   }
+  const { study } = result;
 
   return (
     <section>
