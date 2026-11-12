@@ -13,18 +13,10 @@ import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { bannerSlides } from "@/config/banner-slides";
 import { routes } from "@/config/routes";
+import { studyCategoryList } from "@/config/study-category";
 import { studiesHref } from "@/lib/studies-href";
 import { cn } from "@/lib/utils";
 import { studyListQuerySchema } from "@/schema/study-list-schema";
-import type { StudyCategory } from "@/types/study";
-
-const categories: StudyCategory[] = [
-  "FRONTEND",
-  "BACKEND",
-  "ALGORITHM",
-  "CS",
-  "INTERVIEW",
-];
 
 const sortOptions = [
   { value: "latest", label: "최신순" },
@@ -118,7 +110,7 @@ async function StudyList({
           selected={category === undefined}
           count={categoryCounts.ALL}
         />
-        {categories.map((item) => (
+        {studyCategoryList.map((item) => (
           <CategoryChip
             key={item}
             category={item}

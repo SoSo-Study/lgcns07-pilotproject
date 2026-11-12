@@ -32,18 +32,11 @@ import { EmptyState } from "@/components/templates/empty-state";
 import { PageHeader } from "@/components/templates/page-header";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/config/routes";
+import { studyCategoryList as categories } from "@/config/study-category";
 import { mockStudies } from "@/lib/mock-studies";
-import type { StudyCategory } from "@/types/study";
 
 // 🧩 부품 모음 (/ui-kit) — 팀원용 견본 화면. 사이드바엔 없고 주소로만 들어와요.
 // 부품을 고르고, 아래 "사용:" 코드를 복사해서 쓰면 돼요.
-const categories: StudyCategory[] = [
-  "FRONTEND",
-  "BACKEND",
-  "ALGORITHM",
-  "CS",
-  "INTERVIEW",
-];
 
 export default function UiKitPage() {
   return (
