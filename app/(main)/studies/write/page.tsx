@@ -56,6 +56,7 @@ async function StudyWrite({
         description="바꾼 내용은 바로 목록과 상세에 반영돼요."
       />
       <FormFields
+        key={study.id}
         initial={{
           id: study.id,
           title: study.title,
