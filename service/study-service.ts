@@ -53,8 +53,11 @@ export async function getStudies(
 // cache(): 같은 요청 안에서 탭 제목(generateMetadata)과 본문이 두 번 불러도 한 번만 가져와요
 export const findStudy = cache(
   async (studyId: string, token?: string | null): Promise<Study | null> => {
+    // 글 번호는 숫자 글자로만 (/studies/1%20 · /studies/1.0 · /studies/+1은 없는 글)
+    // 자바스크립트가 정확히 다룰 수 있는 크기까지만 (/studies/999…9 → 1e+30으로 바뀌어 API가 거절, #96)
+    if (!/^\d+$/.test(studyId)) return null;
     const id = Number(studyId);
-    if (!Number.isInteger(id) || id <= 0) return null;
+    if (!Number.isSafeInteger(id) || id <= 0) return null;
 
     // 로그인했으면 액션이 토큰을 넘겨줘요 → "내 신청 상태" · "찜했는지"가 내 기준으로 와요
     // (서비스는 쿠키를 직접 읽지 않아요 — 강의 P1-08 "쿠키 · 이동은 액션")
