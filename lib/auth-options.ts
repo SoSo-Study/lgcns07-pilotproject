@@ -2,9 +2,26 @@ import "server-only";
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { apiPaths } from "@/config/api-paths";
+import { LOGIN_LOCKED_CODE } from "@/config/login-limit";
 import { routes } from "@/config/routes";
 import { apiRequest } from "@/lib/api-client";
+import {
+  attemptKey,
+  clearFailures,
+  lockedFor,
+  recordFailure,
+} from "@/lib/login-attempts";
 import { loginSchema } from "@/schema/auth-schema";
+
+/** 요청한 사람의 IP (Vercel · 프록시 뒤에서는 x-forwarded-for의 첫 번째 값) */
+function clientIp(headers: Record<string, unknown> | undefined) {
+  const forwarded = headers?.["x-forwarded-for"];
+  const first = typeof forwarded === "string" ? forwarded.split(",")[0] : "";
+  const realIp = headers?.["x-real-ip"];
+  return (
+    first.trim() || (typeof realIp === "string" ? realIp : "") || "unknown"
+  );
+}
 
 // NextAuth v4 설정 — 로그인(#4) · 보안 체크리스트(#45 B)
 // 강의(10/29 · 11/3): "토큰은 브라우저로 내리지 않는다 → Next 서버 쪽 세션에"
@@ -37,16 +54,28 @@ export const authOptions: NextAuthOptions = {
         password: { label: "비밀번호", type: "password" },
       },
       // 🔒 화면 검사와 같은 규칙으로 서버에서 한 번 더 (#45 A4)
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
+
+        // 🔒 로그인 잠금 (#53) — 10분 안에 5번 틀리면 5분 동안 막아요 (서버에서 세요)
+        // 잠겼으면 강사님 API를 부르지도 않아요. 없는 이메일이어도 똑같이 막혀서 가입 여부가 새지 않아요
+        const key = attemptKey(clientIp(req?.headers), parsed.data.email);
+        if (lockedFor(key) > 0) throw new Error(LOGIN_LOCKED_CODE);
 
         const result = await apiRequest<AuthResponse>(apiPaths.auth.login, {
           method: "POST",
           body: parsed.data,
         });
-        if (!result.success || !result.data?.accessToken) return null; // 실패 이유는 하나로
 
+        if (!result.success || !result.data?.accessToken) {
+          // 서버가 "틀렸다"고 답한 경우만 세요 (서버 연결 실패 · 서버 오류는 내 잘못이 아니라서 안 셈)
+          if (result.status >= 400 && result.status < 500) recordFailure(key);
+          if (lockedFor(key) > 0) throw new Error(LOGIN_LOCKED_CODE); // 방금 5번째였으면 바로 안내
+          return null; // 실패 이유는 하나로
+        }
+
+        clearFailures(key); // 성공하면 틀린 횟수를 처음부터
         const data = result.data;
         return {
           id: String(data.userId),
