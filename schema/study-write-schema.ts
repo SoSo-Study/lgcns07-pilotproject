@@ -4,11 +4,18 @@ import { z } from "zod";
 // 숫자는 강사님 스웨거(CreateStudyRequest)와 같아요: 제목 100자 · 태그 5개 · 인원 2~10명 · 소개 2000자
 // 보내는 값은 코드(FRONTEND · ONLINE)와 숫자(5) — 한국어는 화면에서만 (#14 팀 결정)
 
-/** 오늘 날짜(한국 시간) "2026-11-11" — 서버는 UTC라 직접 구해요 */
-function todayInSeoul() {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(
-    new Date(),
-  );
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * 고를 수 있는 가장 이른 마감일 = 내일(한국 시간) "2026-11-13"
+ * 강사님 서버 규칙이 "마감일은 오늘 이후"라서 오늘은 안 돼요 (#97)
+ * 서버(Vercel)는 UTC라 한국 날짜를 직접 구해요. 화면 달력(min)과 서버 액션 검사가 같이 써요
+ */
+export function earliestDeadline(now = new Date()) {
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+  }).format(now);
+  return new Date(Date.parse(today) + DAY_MS).toISOString().slice(0, 10);
 }
 
 export const studyWriteSchema = z.object({
@@ -29,8 +36,8 @@ export const studyWriteSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "마감일을 골라 주세요")
     .refine(
-      (date) => date >= todayInSeoul(),
-      "마감일은 오늘부터 고를 수 있어요",
+      (date) => date >= earliestDeadline(),
+      "마감일은 내일부터 고를 수 있어요",
     ),
   mode: z.enum(["ONLINE", "OFFLINE", "BOTH"], {
     message: "진행 방식을 골라 주세요",

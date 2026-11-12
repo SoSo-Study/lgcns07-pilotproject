@@ -11,6 +11,7 @@ import {
 import { routes } from "@/config/routes";
 import { studyCategories } from "@/config/study-category";
 import { studyModeLabels } from "@/config/study-mode";
+import { earliestDeadline } from "@/schema/study-write-schema";
 import type { Study, StudyMode } from "@/types/study";
 
 /** 수정할 때 폼을 채울 값 (등록이면 없음) */
@@ -259,6 +260,7 @@ export default function StudyWriteForm({
             name="deadline"
             type={dateType}
             required
+            min={earliestDeadline()} // 달력에서 오늘 · 지난 날짜는 못 골라요 (#97)
             value={deadline}
             placeholder="날짜 선택"
             onChange={(e) => setDeadline(e.target.value)}
