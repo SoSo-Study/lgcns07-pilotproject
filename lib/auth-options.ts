@@ -15,6 +15,16 @@ function clientIp(headers: Record<string, unknown> | undefined) {
   );
 }
 
+/** 요청한 사람의 IP (Vercel · 프록시 뒤에서는 x-forwarded-for의 첫 번째 값) */
+function clientIp(headers: Record<string, unknown> | undefined) {
+  const forwarded = headers?.["x-forwarded-for"];
+  const first = typeof forwarded === "string" ? forwarded.split(",")[0] : "";
+  const realIp = headers?.["x-real-ip"];
+  return (
+    first.trim() || (typeof realIp === "string" ? realIp : "") || "unknown"
+  );
+}
+
 // NextAuth v4 설정 — 로그인(#4) · 보안 체크리스트(#45 B)
 // 강의(10/29 · 11/3): "토큰은 브라우저로 내리지 않는다 → Next 서버 쪽 세션에"
 // - 강사님 토큰(access · refresh)은 jwt 콜백 안에만 → NEXTAUTH_SECRET으로 암호화된 httpOnly 쿠키
