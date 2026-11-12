@@ -16,11 +16,11 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { routes } from "@/config/routes";
 import { getCurrentUser } from "@/lib/current-user";
 import { formatDate } from "@/lib/format-date";
+import { ApplyBox } from "./apply-box";
 import { AuthorActions } from "./author-actions";
 
 // 탭 제목 · 카톡 미리보기 — 스터디마다 다르게
@@ -125,10 +125,8 @@ async function StudyDetail({
 
         <aside className="lg:sticky lg:top-8 lg:w-72 lg:shrink-0">
           <StudyInfoCard study={study}>
-            {/* #8 참여 신청: 이 버튼을 신청 폼으로 바꿔요 */}
-            <Button disabled className="w-full">
-              참여 신청하기
-            </Button>
+            {/* #8 참여 신청 · 신청 취소 — 내 상황에 맞는 버튼 하나 */}
+            <ApplyBox study={study} isLoggedIn={!!me} isAuthor={isAuthor} />
           </StudyInfoCard>
         </aside>
       </div>

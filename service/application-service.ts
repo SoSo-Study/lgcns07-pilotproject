@@ -21,6 +21,20 @@ export async function getApplicationsByStudy(
   });
 }
 
+// 참여 신청 — POST /api/v1/studies/{id}/applications { message } (#8, #14 6번)
+// 중복 신청 · 자리 없음 · 마감 · 내 글 신청은 강사님 서버가 막아요 → 실패 message를 그대로 화면에
+export async function applyToStudy(
+  token: string,
+  studyId: number,
+  message: string,
+): Promise<ApiResponse<Application | null>> {
+  return apiRequest<Application>(apiPaths.application.apply(studyId), {
+    method: "POST",
+    token,
+    body: { message },
+  });
+}
+
 // 신청 하나를 승인 또는 거절 — PATCH /api/v1/applications/{id} { status }
 export async function decideApplication(
   token: string,
