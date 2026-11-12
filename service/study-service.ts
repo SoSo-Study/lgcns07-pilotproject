@@ -3,9 +3,11 @@ import { apiPaths } from "@/config/api-paths";
 import { apiRequest } from "@/lib/api-client";
 import type { ApiResponse } from "@/types/api-response";
 import type {
+  BookmarkResult,
   PageData,
   Study,
   StudyListData,
+  StudyComment,
   StudyListQuery,
   StudySummary,
 } from "@/types/study";
@@ -125,4 +127,35 @@ export async function deleteStudy(
     token,
   });
   return { ...result, data: null };
+}
+
+// ② 댓글 목록 — GET /api/v1/studies/{id}/comments (누구나, 오래된 순)
+export async function getStudyComments(
+  studyId: number,
+): Promise<ApiResponse<StudyComment[] | null>> {
+  return apiRequest<StudyComment[]>(apiPaths.study.comments(studyId));
+}
+
+// ② 댓글 쓰기 — POST /api/v1/studies/{id}/comments { content } (회원, 작성자는 서버가 토큰으로)
+export async function createStudyComment(
+  token: string,
+  studyId: number,
+  content: string,
+): Promise<ApiResponse<StudyComment | null>> {
+  return apiRequest<StudyComment>(apiPaths.study.comments(studyId), {
+    method: "POST",
+    token,
+    body: { content },
+  });
+}
+
+// ② 찜 — POST /api/v1/studies/{id}/bookmarks (회원, 누를 때마다 켜짐 · 꺼짐)
+export async function toggleStudyBookmark(
+  token: string,
+  studyId: number,
+): Promise<ApiResponse<BookmarkResult | null>> {
+  return apiRequest<BookmarkResult>(apiPaths.study.bookmarks(studyId), {
+    method: "POST",
+    token,
+  });
 }

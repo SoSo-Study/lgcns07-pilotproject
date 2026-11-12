@@ -22,6 +22,8 @@ import { getCurrentUser } from "@/lib/current-user";
 import { formatDate } from "@/lib/format-date";
 import { ApplyBox } from "./apply-box";
 import { AuthorActions } from "./author-actions";
+import { BookmarkButton } from "./bookmark-button";
+import { CommentSection } from "./comment-section";
 
 // 탭 제목 · 카톡 미리보기 — 스터디마다 다르게
 export async function generateMetadata({
@@ -108,25 +110,35 @@ async function StudyDetail({
             <StatusBadge status={study.status} />
             <span>
               {author} 님이 {formatDate(study.createdAt)}에 모집을 시작했어요
+              {study.commentCount !== undefined &&
+                ` · 댓글 ${study.commentCount}`}
             </span>
           </div>
         }
       />
 
       <div className="flex flex-col gap-6 lg:flex-1 lg:flex-row lg:items-start">
-        <Panel
-          className="min-w-0 flex-1 lg:flex lg:flex-col lg:self-stretch lg:*:flex-1"
-          header={<>{author} · 스터디 소개</>}
-        >
-          <p className="max-w-prose wrap-break-word break-keep whitespace-pre-line">
-            {study.content}
-          </p>
-        </Panel>
+        {/* 왼쪽: 소개 + 댓글 (피그마 ②) — 댓글이 아래를 채워서 "화면 꽉 채우기"는 소개 상자 대신 이 묶음이 해요 */}
+        <div className="flex min-w-0 flex-1 flex-col gap-8">
+          <Panel header={<>{author} · 스터디 소개</>}>
+            <p className="max-w-prose wrap-break-word break-keep whitespace-pre-line">
+              {study.content}
+            </p>
+          </Panel>
+          <CommentSection studyId={study.id} isLoggedIn={!!me} />
+        </div>
 
         <aside className="lg:sticky lg:top-8 lg:w-72 lg:shrink-0">
           <StudyInfoCard study={study}>
             {/* #8 참여 신청 · 신청 취소 — 내 상황에 맞는 버튼 하나 */}
             <ApplyBox study={study} isLoggedIn={!!me} isAuthor={isAuthor} />
+            {/* #11 찜하기 — 누르면 바로 바뀌고(낙관적), 실패하면 되돌려요 */}
+            <BookmarkButton
+              studyId={study.id}
+              bookmarked={study.bookmarked ?? false}
+              bookmarkCount={study.bookmarkCount ?? 0}
+              isLoggedIn={!!me}
+            />
           </StudyInfoCard>
         </aside>
       </div>

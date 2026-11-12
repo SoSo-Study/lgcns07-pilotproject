@@ -85,6 +85,21 @@ export type MyApplication = {
   study: Pick<Study, "id" | "title" | "category" | "status" | "authorName">;
 };
 
+// 댓글 하나 (GET /api/v1/studies/{id}/comments — 실제 응답 기준, 오래된 순)
+export type StudyComment = {
+  id: number;
+  content: string;
+  authorId: number;
+  authorName: string;
+  createdAt: string;
+};
+
+// 찜 누른 결과 (POST /api/v1/studies/{id}/bookmarks)
+export type BookmarkResult = {
+  bookmarked: boolean;
+  bookmarkCount: number;
+};
+
 // 목록을 가져올 때 보내는 조건 (주소의 ?q=&category=&sort=&page= 와 짝)
 export type StudyListQuery = {
   q?: string; // 검색어
