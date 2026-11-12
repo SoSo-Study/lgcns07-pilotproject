@@ -1,5 +1,6 @@
 import { Check, Undo2, X } from "lucide-react";
 import { DecisionButtons } from "./decision-buttons";
+import { RevokeApprovalButton } from "./revoke-approval-button";
 import { Pill } from "@/components/atoms/pill";
 import { EmptyState } from "@/components/templates/empty-state";
 import { formatDate } from "@/lib/format-date";
@@ -93,11 +94,15 @@ function StatusCell({
   application: Application;
   isFull: boolean;
 }) {
+  // 승인됨 + [승인 취소] (#82)
   if (application.status === "APPROVED") {
     return (
-      <Pill tone="success" icon={Check}>
-        승인됨
-      </Pill>
+      <span className="flex flex-wrap items-center gap-2">
+        <Pill tone="success" icon={Check}>
+          승인됨
+        </Pill>
+        <RevokeApprovalButton applicationId={application.id} />
+      </span>
     );
   }
 
