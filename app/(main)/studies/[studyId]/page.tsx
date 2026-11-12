@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { getStudyDetail } from "@/actions/study-actions";
 import { StatusBadge } from "@/components/atoms/status-badge";
+import { MarkdownText } from "@/components/molecules/markdown-text";
 import { Panel } from "@/components/molecules/panel";
 import { StudyInfoCard } from "@/components/organisms/study-info-card";
 import { PageHeader } from "@/components/templates/page-header";
@@ -118,9 +119,8 @@ async function StudyDetail({
           className="min-w-0 flex-1 lg:flex lg:flex-col lg:self-stretch lg:*:flex-1"
           header={<>{author} · 스터디 소개</>}
         >
-          <p className="max-w-prose wrap-break-word break-keep whitespace-pre-line">
-            {study.content}
-          </p>
+          {/* #26 소개 글 서식 — 소제목 · 목록 · 굵게 · 링크 */}
+          <MarkdownText>{study.content}</MarkdownText>
         </Panel>
 
         <aside className="lg:sticky lg:top-8 lg:w-72 lg:shrink-0">
