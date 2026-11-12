@@ -35,10 +35,13 @@ export function PasswordResetForm() {
     {},
   );
   const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false); // 보안키를 보냈는지 (2단계 칸을 보여 줄지)
+  // 보안키를 보낸 결과 — 보내면 안내 문구 · 테스트 보안키가 함께 생기고, 이메일을 바꾸면 함께 사라져요
+  const [sentInfo, setSentInfo] = useState<{
+    message: string;
+    demoToken: string | null;
+  } | null>(null);
+  const sent = sentInfo !== null; // 2단계 칸을 보여 줄지 (따로 저장하지 않고 계산)
   const [emailMessage, setEmailMessage] = useState<string | null>(null);
-  const [sentMessage, setSentMessage] = useState<string | null>(null);
-  const [demoToken, setDemoToken] = useState<string | null>(null);
   const [clientErrors, setClientErrors] = useState<
     ResetPasswordState["errors"]
   >({});
@@ -50,9 +53,7 @@ export function PasswordResetForm() {
     setEmailMessage(null);
     // 보낸 뒤에 이메일을 바꾸면 처음부터 (받은 보안키는 이전 이메일 것이라서)
     if (sent) {
-      setSent(false);
-      setSentMessage(null);
-      setDemoToken(null);
+      setSentInfo(null);
       setClientErrors({});
     }
   }
@@ -64,9 +65,10 @@ export function PasswordResetForm() {
         setEmailMessage(result.message);
         return;
       }
-      setSent(true);
-      setSentMessage(result.message);
-      setDemoToken(result.demoToken ?? null);
+      setSentInfo({
+        message: result.message,
+        demoToken: result.demoToken ?? null,
+      });
       resendTimer.start(RESET_RESEND_WAIT_SECONDS);
     });
   }
@@ -142,9 +144,9 @@ export function PasswordResetForm() {
       </FormField>
 
       {/* ── 2단계: 보안키 + 새 비밀번호 (보안키를 보낸 뒤에만) ── */}
-      {sent && (
+      {sentInfo && (
         <>
-          {sentMessage && <FormAlert>{sentMessage}</FormAlert>}
+          {sentInfo.message && <FormAlert>{sentInfo.message}</FormAlert>}
 
           <FormField
             id="token"
@@ -152,8 +154,8 @@ export function PasswordResetForm() {
             required
             error={errors.token}
             description={
-              demoToken
-                ? `🧪 테스트 서버라 메일 대신 알려 줘요 — 보안키 ${demoToken}`
+              sentInfo.demoToken
+                ? `🧪 테스트 서버라 메일 대신 알려 줘요 — 보안키 ${sentInfo.demoToken}`
                 : undefined
             }
           >
