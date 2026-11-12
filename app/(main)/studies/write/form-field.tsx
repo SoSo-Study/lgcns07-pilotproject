@@ -49,26 +49,38 @@ export default function StudyWriteForm({
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [tagNotice, setTagNotice] = useState<string | null>(null);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const trimmed = tagInput.trim().slice(0, MAX_TAG_LENGTH);
-      // 쉼표는 태그를 이어 붙이는 기호라 빼요. 5개까지만 (서버 규칙과 같게)
-      if (
-        trimmed &&
-        !trimmed.includes(",") &&
-        !tags.includes(trimmed) &&
-        tags.length < MAX_TAGS
-      ) {
-        setTags([...tags, trimmed]);
-        setTagInput("");
-      }
+    if (e.key !== "Enter") return;
+    e.preventDefault(); // Enter로 폼이 제출되는 것 막기
+    if (e.nativeEvent.isComposing) return; // 한글 조합 중 Enter는 무시 (중복 입력 방지)
+
+    const trimmed = tagInput.trim();
+    if (!trimmed) return;
+
+    // 쉼표는 태그를 이어 붙이는 기호라 빼요. 5개까지만 (서버 규칙과 같게)
+    if (trimmed.includes(",")) {
+      setTagNotice("쉼표(,)는 태그에 넣을 수 없어요.");
+      return;
     }
+    if (tags.includes(trimmed)) {
+      setTagNotice("이미 추가한 태그예요.");
+      return;
+    }
+    if (tags.length >= MAX_TAGS) {
+      setTagNotice(`태그는 최대 ${MAX_TAGS}개까지 추가할 수 있어요.`);
+      return;
+    }
+
+    setTags([...tags, trimmed]);
+    setTagInput("");
+    setTagNotice(null);
   };
 
   const removeTag = (tagToRemove: string) => {
     setTags(tags.filter((t) => t !== tagToRemove));
+    setTagNotice(null);
   };
 
   // 등록 후 폼 비우기: state로 관리하는 값 + defaultValue를 쓰는 칸을 둘 다 되돌려요
@@ -80,6 +92,7 @@ export default function StudyWriteForm({
     setDeadline("");
     setDateType("text"); // 마감일을 "날짜 선택" 안내 글이 보이는 상태로
     setDescription("");
+    setTagNotice(null);
   };
 
   const onSubmitHandler = (e: React.FormEvent<HTMLFormElement>) => {
@@ -299,7 +312,19 @@ export default function StudyWriteForm({
             marginBottom: "0.5rem",
           }}
         >
-          기술 태그
+          기술 태그 {/* 현재 개수 표시 */}
+          <span
+            style={{
+              fontSize: "0.75rem",
+              fontWeight: "normal",
+              color:
+                tags.length >= MAX_TAGS
+                  ? "var(--color-danger, #ef4444)"
+                  : "var(--text-muted, #6b7280)",
+            }}
+          >
+            {tags.length} / {MAX_TAGS}
+          </span>
         </label>
         <div
           style={{
@@ -329,10 +354,15 @@ export default function StudyWriteForm({
               {tag} ✕
             </span>
           ))}
+          {/* maxLength 추가, onChange에서 안내 지우기 */}
           <input
             type="text"
             value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
+            maxLength={MAX_TAG_LENGTH}
+            onChange={(e) => {
+              setTagInput(e.target.value);
+              setTagNotice(null);
+            }}
             onKeyDown={handleKeyDown}
             placeholder={tags.length === 0 ? "태그 입력 후 Enter" : ""}
             style={{
@@ -345,6 +375,25 @@ export default function StudyWriteForm({
             }}
           />
         </div>
+        {/* 안내 문구 (소개의 글자 수 안내와 같은 방식) */}
+        <span
+          role="status"
+          aria-live="polite"
+          style={{
+            display: "block",
+            marginTop: "0.25rem",
+            fontSize: "0.75rem",
+            color:
+              tagNotice || tags.length >= MAX_TAGS
+                ? "var(--color-danger, #ef4444)"
+                : "var(--text-muted, #6b7280)",
+          }}
+        >
+          {tagNotice ??
+            (tags.length >= MAX_TAGS
+              ? `최대 ${MAX_TAGS}개까지 추가했어요.`
+              : `Enter로 태그를 추가해요 · 최대 ${MAX_TAGS}개, 태그당 ${MAX_TAG_LENGTH}자`)}
+        </span>
       </div>
 
       {/* 진행 방식 */}
