@@ -1,12 +1,13 @@
 import { cache } from "react";
 import { apiPaths } from "@/config/api-paths";
 import { apiRequest } from "@/lib/api-client";
-import { getAccessToken } from "@/lib/auth-session";
 import type { ApiResponse } from "@/types/api-response";
 import type {
+  BookmarkResult,
   PageData,
   Study,
   StudyListData,
+  StudyComment,
   StudyListQuery,
   StudySummary,
 } from "@/types/study";
@@ -51,13 +52,14 @@ export async function getStudies(
 // 서버와 연결이 안 되는 등 다른 실패는 오류로 알려요 (없는 글로 착각하지 않게)
 // cache(): 같은 요청 안에서 탭 제목(generateMetadata)과 본문이 두 번 불러도 한 번만 가져와요
 export const findStudy = cache(
-  async (studyId: string): Promise<Study | null> => {
+  async (studyId: string, token?: string | null): Promise<Study | null> => {
     const id = Number(studyId);
     if (!Number.isInteger(id) || id <= 0) return null;
 
-    // 로그인했으면 토큰을 붙여야 "내 신청 상태" · "찜했는지"가 내 기준으로 와요
+    // 로그인했으면 액션이 토큰을 넘겨줘요 → "내 신청 상태" · "찜했는지"가 내 기준으로 와요
+    // (서비스는 쿠키를 직접 읽지 않아요 — 강의 P1-08 "쿠키 · 이동은 액션")
     const result = await apiRequest<Study>(apiPaths.study.detail(id), {
-      token: await getAccessToken(),
+      token,
     });
     if (result.success && result.data) return result.data;
     if (result.status === 404) return null;
@@ -125,4 +127,35 @@ export async function deleteStudy(
     token,
   });
   return { ...result, data: null };
+}
+
+// ② 댓글 목록 — GET /api/v1/studies/{id}/comments (누구나, 오래된 순)
+export async function getStudyComments(
+  studyId: number,
+): Promise<ApiResponse<StudyComment[] | null>> {
+  return apiRequest<StudyComment[]>(apiPaths.study.comments(studyId));
+}
+
+// ② 댓글 쓰기 — POST /api/v1/studies/{id}/comments { content } (회원, 작성자는 서버가 토큰으로)
+export async function createStudyComment(
+  token: string,
+  studyId: number,
+  content: string,
+): Promise<ApiResponse<StudyComment | null>> {
+  return apiRequest<StudyComment>(apiPaths.study.comments(studyId), {
+    method: "POST",
+    token,
+    body: { content },
+  });
+}
+
+// ② 찜 — POST /api/v1/studies/{id}/bookmarks (회원, 누를 때마다 켜짐 · 꺼짐)
+export async function toggleStudyBookmark(
+  token: string,
+  studyId: number,
+): Promise<ApiResponse<BookmarkResult | null>> {
+  return apiRequest<BookmarkResult>(apiPaths.study.bookmarks(studyId), {
+    method: "POST",
+    token,
+  });
 }

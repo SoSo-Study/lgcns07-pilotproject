@@ -46,7 +46,7 @@ export async function saveStudyAction(
 
   // 2. 수정이면 내 글인지 먼저 확인 (서버도 403으로 한 번 더 막아요)
   if (isEdit) {
-    const study = await findStudy(String(editId));
+    const study = await findStudy(String(editId), auth.accessToken);
     if (!study || study.authorId !== auth.userId) {
       return { ok: false, formError: "스터디장만 수정할 수 있어요." };
     }
@@ -66,6 +66,22 @@ export async function saveStudyAction(
   revalidatePath(routes.studies);
   revalidatePath(routes.myStudies);
   return { ok: true, studyId: result.data.id };
+}
+
+// ── 수정 화면 채우기 ──
+// /studies/write?studyId=3 — 내 글일 때만 값을 돌려줘요 (화면 → 여기 → service)
+export async function loadStudyForEdit(studyId: string) {
+  const auth = await getServerAuth();
+  if (!auth) return { ok: false as const, message: "로그인이 필요해요." };
+
+  const study = await findStudy(studyId, auth.accessToken);
+  if (!study || study.authorId !== auth.userId) {
+    return {
+      ok: false as const,
+      message: "스터디장만 수정할 수 있어요. 없는 글이거나 내 글이 아니에요.",
+    };
+  }
+  return { ok: true as const, study };
 }
 
 // ── 삭제 ──

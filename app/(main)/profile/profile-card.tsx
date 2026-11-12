@@ -4,7 +4,7 @@ import { LogoutButton } from "@/components/molecules/logout-button";
 import { buttonVariants } from "@/components/ui/button";
 import { routes } from "@/config/routes";
 import { cn } from "@/lib/utils";
-import type { MyAccount } from "@/service/auth-service";
+import type { MyAccount } from "@/types/auth";
 
 type ProfileCardProps = {
   account: Pick<MyAccount, "name" | "email" | "statusMessage">;

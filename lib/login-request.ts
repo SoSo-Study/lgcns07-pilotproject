@@ -1,4 +1,5 @@
 import { signIn } from "next-auth/react";
+import { LOGIN_LOCKED_CODE, LOGIN_LOCKED_MESSAGE } from "@/config/login-limit";
 import type { LoginValues } from "@/schema/auth-schema";
 
 // 🔌 로그인 연결 지점 — 화면(LoginForm)은 이 함수만 불러요.
@@ -12,7 +13,11 @@ export type LoginResult = { ok: true } | { ok: false; message: string };
 
 export async function requestLogin(values: LoginValues): Promise<LoginResult> {
   const response = await signIn("credentials", { ...values, redirect: false });
-  return response?.ok && !response.error
-    ? { ok: true }
-    : { ok: false, message: LOGIN_FAILED_MESSAGE };
+  if (response?.ok && !response.error) return { ok: true };
+
+  // 🔒 5번 틀려서 서버가 잠갔으면 잠금 문구 (#53). 그 밖에는 언제나 같은 문구
+  if (response?.error === LOGIN_LOCKED_CODE) {
+    return { ok: false, message: LOGIN_LOCKED_MESSAGE };
+  }
+  return { ok: false, message: LOGIN_FAILED_MESSAGE };
 }

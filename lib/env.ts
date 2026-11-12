@@ -18,4 +18,13 @@ export const env = {
   get apiUrl() {
     return required("API_URL").replace(/\/$/, "");
   },
+  // 로그인 쿠키를 암호화 · 서명하는 비밀값 — 없으면 로그인이 조용히 깨지지 않게 바로 알려요
+  get nextAuthSecret() {
+    return required("NEXTAUTH_SECRET");
+  },
+  // 테스트 서버의 시연용 인증번호(demoCode)를 화면에 보여 줄지 — "true"일 때만 (발표 · 시험용)
+  // 실서비스에선 꺼 두면, 혹시 백엔드가 번호를 보내도 화면으로 안 나가요
+  get showDemoCode() {
+    return process.env.SHOW_DEMO_CODE === "true";
+  },
 };
