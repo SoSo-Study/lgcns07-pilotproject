@@ -1,4 +1,4 @@
-import { Check, X } from "lucide-react";
+import { Check, Undo2, X } from "lucide-react";
 import { DecisionButtons } from "./decision-buttons";
 import { Pill } from "@/components/atoms/pill";
 import { EmptyState } from "@/components/templates/empty-state";
@@ -10,12 +10,19 @@ type ApplicantTableProps = {
   isFull: boolean; // 스터디 자리가 다 찼는지 → 다 찼으면 [승인]을 막아요
 };
 
-// 대기 중인 신청을 맨 위로, 같은 상태끼리는 최신 신청이 위로
-// (스터디장이 처리해야 할 것부터 보이게)
-function pendingFirst(a: Application, b: Application) {
-  const aPending = a.status === "PENDING" ? 0 : 1;
-  const bPending = b.status === "PENDING" ? 0 : 1;
-  if (aPending !== bPending) return aPending - bPending;
+// 표 순서: 대기 중(처리할 것) → 승인 · 거절 → 취소함(지나간 기록)은 맨 아래 (#81)
+// 같은 묶음끼리는 최신 신청이 위로
+const ORDER: Record<Application["status"], number> = {
+  PENDING: 0,
+  APPROVED: 1,
+  REJECTED: 1,
+  CANCELLED: 2,
+};
+
+function byStatusThenLatest(a: Application, b: Application) {
+  if (ORDER[a.status] !== ORDER[b.status]) {
+    return ORDER[a.status] - ORDER[b.status];
+  }
   return b.createdAt.localeCompare(a.createdAt);
 }
 
@@ -34,7 +41,7 @@ export function ApplicantTable({ applications, isFull }: ApplicantTableProps) {
   }
 
   // 원본 목록은 그대로 두고, 복사본을 정렬해요
-  const sorted = [...applications].sort(pendingFirst);
+  const sorted = [...applications].sort(byStatusThenLatest);
 
   return (
     <div className="overflow-hidden rounded-md border border-border bg-card">
@@ -96,6 +103,20 @@ function StatusCell({
 
   if (application.status === "REJECTED") {
     return <Pill icon={X}>거절됨</Pill>;
+  }
+
+  // 신청자가 직접 취소한 신청 — 버튼 없이 기록만 (#81)
+  if (application.status === "CANCELLED") {
+    return (
+      <span className="flex flex-col items-start gap-1">
+        <Pill icon={Undo2}>취소함</Pill>
+        {application.cancelledAt && (
+          <span className="font-mono text-xs text-muted-foreground">
+            {formatDate(application.cancelledAt)} 취소
+          </span>
+        )}
+      </span>
+    );
   }
 
   return (

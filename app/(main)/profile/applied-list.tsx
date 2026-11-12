@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Check, CircleDot, Compass, X } from "lucide-react";
+import { Check, CircleDot, Compass, Undo2, X } from "lucide-react";
 import { CancelApplicationButton } from "./cancel-application-button";
 import { CategoryLabel } from "@/components/atoms/category-label";
 import { Pill } from "@/components/atoms/pill";
@@ -60,7 +60,9 @@ export function AppliedList({ applications }: AppliedListProps) {
             </span>
             <div className="flex items-center gap-2 lg:w-52 lg:shrink-0">
               <StatusPill status={application.status} />
-              {application.status !== "REJECTED" && (
+              {/* 취소 버튼은 대기 중 · 승인됨일 때만 (거절 · 취소한 신청은 끝난 기록) */}
+              {(application.status === "PENDING" ||
+                application.status === "APPROVED") && (
                 <CancelApplicationButton
                   studyId={application.study.id}
                   approved={application.status === "APPROVED"}
@@ -72,7 +74,9 @@ export function AppliedList({ applications }: AppliedListProps) {
       </ul>
       <p className="text-xs text-muted-foreground">
         신청 취소는 대기 중 · 승인된 뒤 모두 할 수 있어요. 승인된 뒤 취소하면
-        인원이 1명 줄고, 마감일 전이면 모집이 다시 열려요(서버에서 처리).
+        인원이 1명 줄고, 마감일 전이면 모집이 다시 열려요(서버에서 처리). 취소한
+        신청은 &lsquo;취소함&rsquo;으로 남고, 같은 스터디에 다시 신청할 수
+        있어요.
       </p>
     </div>
   );
@@ -87,6 +91,8 @@ function StatusPill({ status }: { status: MyApplication["status"] }) {
     );
   }
   if (status === "REJECTED") return <Pill icon={X}>거절됨</Pill>;
+  // 내가 취소한 신청 — 지우지 않고 기록으로 남아요. 같은 스터디에 다시 신청할 수 있어요 (#81)
+  if (status === "CANCELLED") return <Pill icon={Undo2}>취소함</Pill>;
   return (
     <Pill tone="accent" icon={CircleDot}>
       대기 중
