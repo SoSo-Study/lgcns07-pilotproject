@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CommentForm } from "./comment-form";
+import { CommentForm } from "@/components/organisms/comment-form";
 import { loadStudyComments } from "@/actions/study-social-actions";
 import { Panel } from "@/components/molecules/panel";
 import { buttonVariants } from "@/components/ui/button";

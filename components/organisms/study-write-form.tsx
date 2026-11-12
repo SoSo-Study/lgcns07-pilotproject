@@ -1,4 +1,4 @@
-// app/(main)/studies/write/form-field.tsx — ③ 모집글 등록 · 수정 폼 (화면: sooahp님 #7)
+// components/organisms/study-write-form.tsx — ③ 모집글 등록 · 수정 폼 (화면: sooahp님 #7)
 // API 연결(#46): 값은 코드 · 숫자로 보내고(#14 팀 결정), 서버 액션이 같은 규칙으로 다시 검사해요(#45 A4)
 "use client";
 

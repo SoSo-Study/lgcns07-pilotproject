@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/templates/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { loadStudyForEdit } from "@/actions/study-write-actions";
 import { ResetOnLeave } from "@/components/templates/reset-on-leave";
-import FormFields from "./form-field";
+import StudyWriteForm from "@/components/organisms/study-write-form";
 
 // ③ 모집글 등록 · 수정 — 수정은 주소로: /studies/write?studyId=3 (routes.studyEdit)
 // 로그인은 proxy가 먼저 확인해요. 수정은 "내 글인지"를 서버에서 한 번 더 (#45 B6)
@@ -33,7 +33,7 @@ async function StudyWrite({
         />
         {/* 화면을 떠나면 폼을 처음 상태로 (cacheComponents는 떠난 화면을 숨겨 두기만 해요 — 로그인 · 가입과 같은 부품) */}
         <ResetOnLeave>
-          <FormFields />
+          <StudyWriteForm />
         </ResetOnLeave>
       </section>
     );
@@ -60,7 +60,7 @@ async function StudyWrite({
         description="바꾼 내용은 바로 목록과 상세에 반영돼요."
       />
       <ResetOnLeave>
-        <FormFields
+        <StudyWriteForm
           key={study.id}
           initial={{
             id: study.id,

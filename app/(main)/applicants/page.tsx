@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { Plus } from "lucide-react";
-import { ApplicantStats } from "./applicant-stats";
-import { ApplicantTable } from "./applicant-table";
-import { StudySelect } from "./study-select";
+import { ApplicantStats } from "@/components/molecules/applicant-stats";
+import { ApplicantTable } from "@/components/organisms/applicant-table";
+import { StudySelect } from "@/components/molecules/study-select";
 import { getApplicationsAction } from "@/actions/application-actions";
 import { loadMyStudies } from "@/actions/study-actions";
 import { EmptyState } from "@/components/templates/empty-state";

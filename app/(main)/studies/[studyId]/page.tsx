@@ -21,10 +21,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { routes } from "@/config/routes";
 import { getCurrentUser } from "@/lib/current-user";
 import { formatDate } from "@/lib/format-date";
-import { ApplyBox } from "./apply-box";
-import { AuthorActions } from "./author-actions";
-import { BookmarkButton } from "./bookmark-button";
-import { CommentSection } from "./comment-section";
+import { ApplyBox } from "@/components/organisms/apply-box";
+import { AuthorActions } from "@/components/organisms/author-actions";
+import { BookmarkButton } from "@/components/organisms/bookmark-button";
+import { CommentSection } from "@/components/organisms/comment-section";
 
 // 탭 제목 · 카톡 미리보기 — 스터디마다 다르게
 export async function generateMetadata({

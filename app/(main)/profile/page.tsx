@@ -1,9 +1,9 @@
 import { Suspense } from "react";
-import { AppliedList } from "./applied-list";
-import { ChangePasswordForm } from "./change-password-form";
-import { ProfileCard } from "./profile-card";
-import { ProfileStats } from "./profile-stats";
-import { ProfileTabs } from "./profile-tabs";
+import { AppliedList } from "@/components/organisms/applied-list";
+import { ChangePasswordForm } from "@/components/organisms/change-password-form";
+import { ProfileCard } from "@/components/organisms/profile-card";
+import { ProfileStats } from "@/components/molecules/profile-stats";
+import { ProfileTabs } from "@/components/molecules/profile-tabs";
 import { loadProfile } from "@/actions/profile-actions";
 import { StudyTable } from "@/components/organisms/study-table";
 import { PageHeader } from "@/components/templates/page-header";

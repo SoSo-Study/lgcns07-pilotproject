@@ -31,13 +31,14 @@ app/
 └─ (auth)/            사이드바 없는 화면
    ├─ login/                   ⑤ 로그인 (#4)
    └─ signup/                  ⑥ 회원가입 (#3)
+   ※ app/에는 Next 파일(page · layout · error …)만 — 부품은 components/에 (#71)
 actions/      "use server" 서버 액션 (폼 제출 · 버튼)
 service/      실제로 API를 부르는 곳 (fetch)
 components/
 ├─ ui/           shadcn 원본 (고치지 말고 가져다 쓰기)
 ├─ atoms/        가장 작은 부품 (상태 뱃지 · 기술 태그 · 분야 칩)
-├─ molecules/    작은 부품 몇 개 묶음
-├─ organisms/    화면의 큰 덩어리 (사이드바 · 스터디 표)
+├─ molecules/    작은 부품 몇 개 묶음 (보여 주기만 — 서버 액션은 부르지 않아요)
+├─ organisms/    화면의 큰 덩어리 (사이드바 · 스터디 표 · 폼 · 서버 액션을 부르는 버튼)
 └─ templates/    화면 틀 (제목 줄 등)
 hooks/        use-로 시작하는 훅
 schema/       zod 검사 규칙 (화면 · 서버가 같이 씀)
@@ -95,10 +96,10 @@ page.tsx  →  actions/  →  service/  →  강사님 Spring API
 feat/5-study-list ─PR(Squash)─▶ dev ─PR(Merge, 리더)─▶ main (발표 · 배포용 완성본)
 ```
 
-| 브랜치 | 역할 | 합치는 방법 |
-|---|---|---|
-| `dev` (기본 브랜치) | 매일 모으는 곳. 모든 PR은 여기로 | **Squash and merge** (승인 1명) |
-| `main` | 확인을 마친 완성본 (배포 · 발표) | 리더가 dev → main PR을 **Create a merge commit**으로 (승인 1명) |
+| 브랜치              | 역할                             | 합치는 방법                                                     |
+| ------------------- | -------------------------------- | --------------------------------------------------------------- |
+| `dev` (기본 브랜치) | 매일 모으는 곳. 모든 PR은 여기로 | **Squash and merge** (승인 1명)                                 |
+| `main`              | 확인을 마친 완성본 (배포 · 발표) | 리더가 dev → main PR을 **Create a merge commit**으로 (승인 1명) |
 
 1. 보드에서 내 이슈 고르기 → 이슈 오른쪽 **Assignees → assign yourself**
 2. 최신 dev 받기: `git switch dev` → `git pull`

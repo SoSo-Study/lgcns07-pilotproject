@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Check, CircleDot, Compass, Undo2, X } from "lucide-react";
-import { CancelApplicationButton } from "./cancel-application-button";
+import { CancelApplicationButton } from "@/components/organisms/cancel-application-button";
 import { CategoryLabel } from "@/components/atoms/category-label";
 import { Pill } from "@/components/atoms/pill";
 import { EmptyState } from "@/components/templates/empty-state";

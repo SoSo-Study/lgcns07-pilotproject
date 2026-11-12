@@ -1,6 +1,6 @@
 import { Check, Undo2, X } from "lucide-react";
-import { DecisionButtons } from "./decision-buttons";
-import { RevokeApprovalButton } from "./revoke-approval-button";
+import { DecisionButtons } from "@/components/organisms/decision-buttons";
+import { RevokeApprovalButton } from "@/components/organisms/revoke-approval-button";
 import { Pill } from "@/components/atoms/pill";
 import { EmptyState } from "@/components/templates/empty-state";
 import { formatDate } from "@/lib/format-date";
