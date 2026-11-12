@@ -71,9 +71,21 @@ export default function StudyWriteForm({
     setTags(tags.filter((t) => t !== tagToRemove));
   };
 
+  // 등록 후 폼 비우기: state로 관리하는 값 + defaultValue를 쓰는 칸을 둘 다 되돌려요
+  const resetForm = (form: HTMLFormElement) => {
+    form.reset(); // 제목 · 분야 · 모집 인원 (defaultValue 칸)
+    setTags([]);
+    setTagInput("");
+    setMode("ONLINE");
+    setDeadline("");
+    setDateType("text"); // 마감일을 "날짜 선택" 안내 글이 보이는 상태로
+    setDescription("");
+  };
+
   const onSubmitHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
 
     // 서버 액션: 검사 → 강사님 API 저장. 기다리는 동안 버튼이 잠겨요(연타 방지)
     startTransition(async () => {
@@ -85,6 +97,7 @@ export default function StudyWriteForm({
       }
       setErrors({});
       setFormError(null);
+      if (!initial) resetForm(form); // 등록이면 폼 초기화
       // 저장한 글의 상세로 (replace: 뒤로 가기로 폼에 다시 오지 않게)
       router.replace(routes.study(result.studyId));
       router.refresh();
