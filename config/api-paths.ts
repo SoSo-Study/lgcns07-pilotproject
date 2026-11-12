@@ -39,4 +39,11 @@ export const apiPaths = {
       `/api/v1/applications/${applicationId}`,
     mine: "/api/v1/applications/me",
   },
+  // 🔔 알림 (#83) — 스터디 알림 종류는 API 요청 17번
+  notification: {
+    list: "/api/v1/notifications", // ?unreadOnly=false&limit=50
+    read: (notificationId: number | string) =>
+      `/api/v1/notifications/${notificationId}/read`, // PATCH 하나 읽음
+    readMany: "/api/v1/notifications/read", // POST { ids } 여러 개 읽음
+  },
 } as const;

@@ -11,6 +11,7 @@ export const routes = {
   myStudies: "/my-studies",
   uiKit: "/ui-kit", // 🧩 부품 모음 (팀원용 견본)
   applicants: "/applicants",
+  notifications: "/notifications", // 🔔 알림 (#83)
   profile: "/profile", // ⑧ 내 프로필 (#42) — 탭은 ?tab=applied · mine · password
   login: "/login",
   loginNotice: (notice: AuthNoticeKey) => `/login?notice=${notice}`, // 로그인 화면 + 안내 문구

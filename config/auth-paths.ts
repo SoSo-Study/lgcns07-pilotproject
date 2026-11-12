@@ -8,6 +8,7 @@ export const protectedPaths = [
   routes.studyWrite,
   routes.applicants,
   routes.profile, // ⑧ 내 프로필 (#42)
+  routes.notifications, // 🔔 알림 (#83)
 ];
 
 /** 로그인했으면 들어갈 필요가 없는 주소 → 목록으로 */

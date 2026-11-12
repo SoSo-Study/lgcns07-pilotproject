@@ -43,6 +43,7 @@ export const config = {
     "/studies/write/:path*",
     "/applicants/:path*",
     "/profile/:path*",
+    "/notifications/:path*",
     "/login",
     "/signup",
   ],
