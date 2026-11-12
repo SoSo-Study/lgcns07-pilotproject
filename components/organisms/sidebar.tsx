@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Compass, FileText, Plus, Users } from "lucide-react";
 import { Logo } from "@/components/atoms/logo";
+import { NotificationNavLink } from "@/components/molecules/notification-nav-link";
 import { SidebarNavLink } from "@/components/molecules/sidebar-nav-link";
 import { SidebarAccount } from "@/components/organisms/sidebar-account";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -60,6 +61,8 @@ export function Sidebar({ className }: SidebarProps) {
           >
             신청자 관리
           </SidebarNavLink>
+          {/* 🔔 알림 + 안 읽은 수 (#83) */}
+          <NotificationNavLink />
         </Suspense>
       </nav>
 

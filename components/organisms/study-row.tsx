@@ -22,18 +22,22 @@ export const studyColumns = {
 
 // 피그마 StudyRow — 목록 한 줄 (받은 값만 그림. 데이터 불러오기는 page · service에서)
 // 1024px 이상: 한 줄 표 · 그보다 좁으면: 상태 → 제목 · 태그 → 인원 · 마감일 · 스터디장 순서로 쌓은 카드
+// 줄 어디를 눌러도 상세로 가요 (링크는 제목 하나, 덮개가 줄 전체)
 // 사용: {studies.map((study) => <StudyRow key={study.id} study={study} />)}
 export function StudyRow({ study }: StudyRowProps) {
   return (
-    <li className="flex flex-col gap-2 border-t border-border px-4 py-3 hover:bg-muted/40 lg:flex-row lg:items-center lg:gap-4">
+    // relative: 제목 링크의 덮개(after)가 이 줄 크기에 맞게 / group: 줄에 마우스를 올리면 제목 색이 바뀌게
+    // has-[a:focus-visible]: Tab으로 제목 링크에 오면 줄 전체에 포커스 표시
+    <li className="group relative flex flex-col gap-2 border-t border-border px-4 py-3 hover:bg-muted/40 has-[a:focus-visible]:bg-muted/40 has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-inset has-[a:focus-visible]:ring-ring lg:flex-row lg:items-center lg:gap-4">
       <div className={studyColumns.status}>
         <StatusBadge status={study.status} />
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col gap-1">
+        {/* 링크는 제목 하나지만, 투명한 덮개(after:absolute after:inset-0)가 줄 전체를 덮어서 줄 어디를 눌러도 상세로 가요 */}
         <Link
           href={routes.study(study.id)}
-          className="truncate font-bold hover:text-link hover:underline"
+          className="max-w-full self-start truncate font-bold outline-none group-hover:text-link group-hover:underline after:absolute after:inset-0"
         >
           {study.title}
         </Link>
