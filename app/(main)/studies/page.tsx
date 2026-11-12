@@ -68,7 +68,23 @@ async function StudyList({
   const { items: studies, totalPages, openCount, closedCount } = result.data;
   const { categoryCounts } = result.data;
   const currentPage = result.data.page + 1; // API는 0부터, 화면 · 주소는 1부터
+
+  // 검색 · 분야로 걸렀는데 없을 때만 따로 안내 (아니면 표의 기본 문구 "아직 스터디가 없어요")
   const hasFilter = q !== "" || category !== undefined;
+  const filteredEmpty = hasFilter ? (
+    <EmptyState
+      title="검색 결과가 없어요"
+      description="다른 단어로 찾거나 분야를 바꿔 보세요."
+      action={
+        <Link
+          href={routes.studies}
+          className={buttonVariants({ variant: "outline" })}
+        >
+          조건 지우기
+        </Link>
+      }
+    />
+  ) : undefined;
 
   return (
     <div className="flex flex-col gap-4">
@@ -125,22 +141,7 @@ async function StudyList({
         studies={studies}
         openCount={openCount}
         closedCount={closedCount}
-        empty={
-          hasFilter ? (
-            <EmptyState
-              title="검색 결과가 없어요"
-              description="다른 단어로 찾거나 분야를 바꿔 보세요."
-              action={
-                <Link
-                  href={routes.studies}
-                  className={buttonVariants({ variant: "outline" })}
-                >
-                  조건 지우기
-                </Link>
-              }
-            />
-          ) : undefined
-        }
+        empty={filteredEmpty}
       />
 
       <Pagination

@@ -8,7 +8,8 @@ import { loadProfile } from "@/actions/profile-actions";
 import { StudyTable } from "@/components/organisms/study-table";
 import { PageHeader } from "@/components/templates/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { profileTabSchema } from "@/schema/profile-schema";
+import { type ProfileTab, profileTabSchema } from "@/schema/profile-schema";
+import type { MyApplication, StudySummary } from "@/types/study";
 
 export const metadata = { title: "내 프로필" };
 
@@ -68,32 +69,48 @@ async function ProfileContent({
           mineCount={mineCount}
         />
 
-        {tab === "applied" &&
-          (applications.success ? (
-            <AppliedList applications={applied} />
-          ) : (
-            <p role="alert" className="text-sm text-destructive">
-              {applications.message}
-            </p>
-          ))}
-
-        {tab === "mine" &&
-          (studies.success ? (
-            <StudyTable
-              studies={mine}
-              openCount={mine.filter((s) => s.status === "OPEN").length}
-              closedCount={mine.filter((s) => s.status === "CLOSED").length}
-            />
-          ) : (
-            <p role="alert" className="text-sm text-destructive">
-              {studies.message}
-            </p>
-          ))}
-
-        {tab === "password" && <ChangePasswordForm />}
+        <ProfileTabPanel
+          tab={tab}
+          applied={applied}
+          mine={mine}
+          appliedError={applications.success ? undefined : applications.message}
+          mineError={studies.success ? undefined : studies.message}
+        />
       </div>
     </div>
   );
+}
+
+type ProfileTabPanelProps = {
+  tab: ProfileTab;
+  applied: MyApplication[];
+  mine: StudySummary[];
+  /** 목록을 못 불러왔을 때 서버가 준 문구 (불러왔으면 없음) */
+  appliedError?: string;
+  mineError?: string;
+};
+
+// 고른 탭 하나만 그려요 — 분기는 return 위에서 끝내요 (강의 11/5 · 11/6 "리턴은 결과만")
+function ProfileTabPanel({
+  tab,
+  applied,
+  mine,
+  appliedError,
+  mineError,
+}: ProfileTabPanelProps) {
+  if (tab === "password") return <ChangePasswordForm />;
+
+  const error = tab === "mine" ? mineError : appliedError;
+  if (error !== undefined) {
+    return (
+      <p role="alert" className="text-sm text-destructive">
+        {error}
+      </p>
+    );
+  }
+
+  if (tab === "mine") return <StudyTable studies={mine} />;
+  return <AppliedList applications={applied} />;
 }
 
 // 불러오는 동안 보이는 회색 자리 (왼쪽 카드 + 오른쪽 숫자 · 표)
