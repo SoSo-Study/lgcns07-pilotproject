@@ -6,10 +6,12 @@ import { CategoryChip } from "@/components/molecules/category-chip";
 import { Pagination } from "@/components/molecules/pagination";
 import { SearchForm } from "@/components/molecules/search-form";
 import { StudyTable } from "@/components/organisms/study-table";
+import { TerminalBanner } from "@/components/organisms/terminal-banner";
 import { EmptyState } from "@/components/templates/empty-state";
 import { PageHeader } from "@/components/templates/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { bannerSlides } from "@/config/banner-slides";
 import { routes } from "@/config/routes";
 import { studiesHref } from "@/lib/studies-href";
 import { cn } from "@/lib/utils";
@@ -45,6 +47,7 @@ export default function StudiesPage({ searchParams }: PageProps<"/studies">) {
           </Link>
         }
       />
+      <TerminalBanner slides={bannerSlides} className="mb-4" />
       <Suspense fallback={<StudyListSkeleton />}>
         <StudyList searchParams={searchParams} />
       </Suspense>
