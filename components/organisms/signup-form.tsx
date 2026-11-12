@@ -7,7 +7,10 @@ import { FormAlert } from "@/components/molecules/form-alert";
 import { FormField } from "@/components/molecules/form-field";
 import { InputBox } from "@/components/molecules/input-box";
 import { PasswordInput } from "@/components/molecules/password-input";
-import { EmailVerification } from "@/components/organisms/email-verification";
+import {
+  EMAIL_VERIFIED_FIELD,
+  EmailVerification,
+} from "@/components/organisms/email-verification";
 import { fieldErrors } from "@/lib/field-errors";
 import { signupSchema } from "@/schema/auth-schema";
 
@@ -26,7 +29,7 @@ export function SignupForm() {
     signupAction,
     {},
   );
-  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
+  // 남는 상태는 화면 검사 결과 하나 — 인증했는지는 따로 기억하지 않고 폼(숨은 칸)에서 읽어요
   const [clientErrors, setClientErrors] = useState<SignupState["errors"]>({});
 
   // 보내기 전에 화면에서 먼저 검사 — 틀렸거나 인증 전이면 서버로 보내지 않아요
@@ -39,7 +42,9 @@ export function SignupForm() {
       passwordConfirm: formData.get("passwordConfirm") ?? "",
     });
     const errors = parsed.success ? {} : fieldErrors(parsed.error);
-    if (!verifiedEmail) errors.email ??= NOT_VERIFIED;
+    if (formData.get(EMAIL_VERIFIED_FIELD) !== "yes") {
+      errors.email ??= NOT_VERIFIED;
+    }
 
     setClientErrors(errors);
     if (Object.keys(errors).length > 0) {
@@ -57,15 +62,10 @@ export function SignupForm() {
       onSubmit={handleSubmit}
       className="flex flex-col gap-4"
     >
+      {/* 인증을 마치면 화면 검사 문구("이메일 인증을 먼저 해 주세요")는 자식이 감춰요 */}
       <EmailVerification
-        error={errors.email}
-        onVerifiedChange={(email) => {
-          setVerifiedEmail(email);
-          // 인증을 마치면 "이메일 인증을 먼저 해 주세요"를 지워요
-          if (email) {
-            setClientErrors((current) => ({ ...current, email: undefined }));
-          }
-        }}
+        checkError={clientErrors?.email}
+        serverError={state.errors?.email}
       />
 
       <FormField id="nickname" label="닉네임" required error={errors.nickname}>
