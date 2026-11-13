@@ -125,7 +125,11 @@ async function StudyDetail({
             {/* #26 소개 글 서식 — 소제목 · 목록 · 굵게 · 링크 */}
             <MarkdownText>{study.content}</MarkdownText>
           </Panel>
-          <CommentSection studyId={study.id} isLoggedIn={!!me} />
+          <CommentSection
+            studyId={study.id}
+            isLoggedIn={!!me}
+            myUserId={me?.userId}
+          />
         </div>
 
         <aside className="lg:sticky lg:top-8 lg:w-72 lg:shrink-0">

@@ -14,3 +14,9 @@ export const commentSchema = z.object({
     .min(1, "댓글을 입력해 주세요")
     .max(COMMENT_MAX, `댓글은 ${COMMENT_MAX}자까지 쓸 수 있어요`),
 });
+
+// 댓글 삭제 (#111) — 어느 스터디의 어느 댓글인지 번호만 받아요. "누가"는 서버가 로그인 정보로 정해요
+export const commentDeleteSchema = z.object({
+  studyId: z.coerce.number().int().positive(),
+  commentId: z.coerce.number().int().positive(),
+});

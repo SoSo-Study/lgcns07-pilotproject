@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { apiPaths } from "@/config/api-paths";
-import { apiRequest } from "@/lib/api-client";
+import { apiRequest, type ApiResult } from "@/lib/api-client";
 import type { ApiResponse } from "@/types/api-response";
 import type {
   BookmarkResult,
@@ -150,6 +150,20 @@ export async function createStudyComment(
     token,
     body: { content },
   });
+}
+
+// ② 댓글 삭제 — DELETE /api/v1/studies/{id}/comments/{commentId} (작성자만, #111)
+// ⚠ 11/13 기준 강사님 API에 아직 없는 주소예요. status를 같이 돌려줘서 액션이 "아직 없음"을 구분해요
+export async function deleteStudyComment(
+  token: string,
+  studyId: number,
+  commentId: number,
+): Promise<ApiResult<null>> {
+  const result = await apiRequest(apiPaths.study.comment(studyId, commentId), {
+    method: "DELETE",
+    token,
+  });
+  return { ...result, data: null };
 }
 
 // ② 찜 — POST /api/v1/studies/{id}/bookmarks (회원, 누를 때마다 켜짐 · 꺼짐)
