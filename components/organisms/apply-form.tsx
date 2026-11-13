@@ -8,6 +8,7 @@ import { APPLY_MESSAGE_MAX } from "@/schema/application-schema";
 
 // [참여 신청하기] 폼 — 한 줄 소개(최대 50자)를 같이 보내요 (#8)
 // 보내는 동안 버튼이 잠겨서(SubmitButton) 연타가 안 되고, 실패하면 서버 문구를 아래에 보여 줘요
+// 한 줄 소개는 필수라서 모집글 등록 폼처럼 빨간 별(*)로 알려 줘요 (#109)
 export function ApplyForm({ studyId }: { studyId: number }) {
   const [state, formAction] = useActionState<ApplyState, FormData>(
     applyAction,
@@ -18,8 +19,14 @@ export function ApplyForm({ studyId }: { studyId: number }) {
   return (
     <form action={formAction} className="flex flex-col gap-2">
       <input type="hidden" name="studyId" value={studyId} />
-      <label htmlFor="apply-message" className="text-xs text-muted-foreground">
-        한 줄 소개 (스터디장에게 보여요)
+      <label htmlFor="apply-message" className="text-sm font-bold">
+        한 줄 소개{" "}
+        <span aria-hidden className="text-destructive">
+          *
+        </span>{" "}
+        <span className="text-xs font-normal text-muted-foreground">
+          (스터디장에게 보여요)
+        </span>
       </label>
       <Textarea
         id="apply-message"
