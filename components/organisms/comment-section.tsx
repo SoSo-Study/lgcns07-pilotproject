@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CommentForm } from "@/components/organisms/comment-form";
 import { loadStudyComments } from "@/actions/study-social-actions";
+import { CommentDeleteButton } from "@/components/molecules/comment-delete-button";
 import { Panel } from "@/components/molecules/panel";
 import { buttonVariants } from "@/components/ui/button";
 import { routes } from "@/config/routes";
@@ -9,6 +10,8 @@ import { timeAgo } from "@/lib/time-ago";
 type CommentSectionProps = {
   studyId: number;
   isLoggedIn: boolean;
+  /** 로그인한 사람의 번호 — 내 댓글에만 [삭제]를 보여 줘요 (로그인 안 했으면 없음) */
+  myUserId?: number;
 };
 
 // 피그마 ② 소개 아래 "댓글 N" · 목록 · 입력칸 (#11)
@@ -16,6 +19,7 @@ type CommentSectionProps = {
 export async function CommentSection({
   studyId,
   isLoggedIn,
+  myUserId,
 }: CommentSectionProps) {
   const result = await loadStudyComments(studyId);
   const comments = result.data ?? [];
@@ -51,14 +55,23 @@ export async function CommentSection({
               as="article"
               className="min-w-0 flex-1"
               header={
-                <>
-                  <span className="font-mono font-bold text-foreground">
-                    {comment.authorName}
-                  </span>{" "}
-                  <time dateTime={comment.createdAt}>
-                    {timeAgo(comment.createdAt)}
-                  </time>
-                </>
+                <div className="flex flex-wrap items-center justify-between gap-x-2">
+                  <span>
+                    <span className="font-mono font-bold text-foreground">
+                      {comment.authorName}
+                    </span>{" "}
+                    <time dateTime={comment.createdAt}>
+                      {timeAgo(comment.createdAt)}
+                    </time>
+                  </span>
+                  {/* 내 댓글에만 [삭제] (#111) — 진짜로 막는 건 서버 액션이에요 */}
+                  {comment.authorId === myUserId && (
+                    <CommentDeleteButton
+                      studyId={studyId}
+                      commentId={comment.id}
+                    />
+                  )}
+                </div>
               }
             >
               <p className="wrap-break-word whitespace-pre-line">

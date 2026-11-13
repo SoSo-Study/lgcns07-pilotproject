@@ -24,6 +24,10 @@ export const apiPaths = {
     mine: "/api/v1/studies/me",
     comments: (studyId: number | string) =>
       `/api/v1/studies/${studyId}/comments`,
+    // 댓글 하나 (삭제 #111) — ⚠ 11/13 기준 강사님 API에 아직 없어요.
+    // TIL · 게시글 댓글 삭제(DELETE /posts/{id}/comments/{commentId})와 같은 모양으로 맞춰 뒀어요.
+    comment: (studyId: number | string, commentId: number | string) =>
+      `/api/v1/studies/${studyId}/comments/${commentId}`,
     bookmarks: (studyId: number | string) =>
       `/api/v1/studies/${studyId}/bookmarks`,
     tags: "/api/v1/tags",
