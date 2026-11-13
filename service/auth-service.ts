@@ -56,6 +56,53 @@ export async function registerUser(input: {
   };
 }
 
+// 이메일 찾기 — POST /api/v1/auth/find-id { name }
+// 닉네임으로 가려진 이메일(u***@example.com) 목록을 받아요.
+// API는 "전체 주소를 그 이메일로 보냈는지"(emailed)도 알려 주지만 우리는 쓰지 않아요:
+// 그 메일을 읽을 수 있으면 이미 주소를 아는 거라, 화면에서는 가려진 이메일까지만 보여 줘요 (#72)
+export async function findLoginId(
+  name: string,
+): Promise<ApiResponse<{ maskedEmails: string[] } | null>> {
+  const result = await apiRequest<{ maskedEmails?: string[] }>(
+    apiPaths.auth.findId,
+    { method: "POST", body: { name } },
+  );
+  if (!result.success || !result.data) return { ...result, data: null };
+  // 🔒 화면에 쓸 값만 골라요 (응답에 다른 값이 더 와도 넘기지 않아요)
+  return {
+    ...result,
+    data: { maskedEmails: result.data.maskedEmails ?? [] },
+  };
+}
+
+// 비밀번호 찾기 1단계: 보안키 요청 — POST /api/v1/auth/password/forgot { email }
+// 가입한 이메일이든 아니든 서버는 똑같이 성공으로 답해요 (가입 여부를 알려 주지 않으려고)
+// demoToken: 메일 서버가 없는 테스트 서버에서만 와요 (화면에 "시연용"으로만)
+export async function requestPasswordReset(
+  email: string,
+): Promise<ApiResponse<{ demoToken?: string } | null>> {
+  const result = await apiRequest<{ demoToken?: string }>(
+    apiPaths.auth.passwordForgot,
+    { method: "POST", body: { email } },
+  );
+  if (!result.success || !result.data) return { ...result, data: null };
+  return { ...result, data: { demoToken: result.data.demoToken } };
+}
+
+// 비밀번호 찾기 2단계: 새 비밀번호로 바꾸기 — POST /api/v1/auth/password/reset
+// 보안키는 30분 · 1회용. 성공하면 그 계정의 로그인이 전부 풀려요
+export async function resetPassword(input: {
+  email: string;
+  token: string;
+  newPassword: string;
+}): Promise<ApiResponse<null>> {
+  const result = await apiRequest(apiPaths.auth.passwordReset, {
+    method: "POST",
+    body: input,
+  });
+  return { ...result, data: null };
+}
+
 // 내 정보 — GET /api/v1/auth/me (⑧ 프로필)
 export async function getMyAccount(
   token: string,

@@ -7,7 +7,9 @@ export type StudyStatus = "OPEN" | "CLOSED";
 
 export type StudyMode = "ONLINE" | "OFFLINE" | "BOTH";
 
-export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
+// CANCELLED: 신청자가 취소한 신청 — 지우지 않고 기록으로 남아요 (API 요청 15번, #81)
+export type ApplicationStatus =
+  "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
 
 // GET /api/v1/studies/{id} (상세)
 export type Study = {
@@ -74,6 +76,7 @@ export type Application = {
   message: string;
   status: ApplicationStatus;
   createdAt: string;
+  cancelledAt?: string | null; // 취소한 신청만 (#81)
 };
 
 // 내가 신청한 스터디 한 줄 (GET /api/v1/applications/me의 items) — ⑧ 프로필
@@ -82,6 +85,7 @@ export type MyApplication = {
   status: ApplicationStatus;
   message: string;
   createdAt: string;
+  cancelledAt?: string | null; // 취소한 신청만 (#81)
   study: Pick<Study, "id" | "title" | "category" | "status" | "authorName">;
 };
 

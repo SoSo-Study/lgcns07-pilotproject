@@ -38,3 +38,8 @@ export const studyCategories: Record<
     chip: "bg-category-interview-subtle text-category-interview border-category-interview",
   },
 };
+
+/** 분야를 보여 줄 순서 — 위 표에 적은 순서 그대로. 분야를 늘리면 표에만 더하면 돼요 */
+export const studyCategoryList = Object.keys(
+  studyCategories,
+) as StudyCategory[];

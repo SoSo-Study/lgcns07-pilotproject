@@ -68,5 +68,41 @@ export const signupSchema = z
     when: (payload) => passwordPair.safeParse(payload.value).success,
   });
 
+/**
+ * 이메일 찾기 폼 — 닉네임으로 찾아요.
+ * 찾기에서는 "비었는지 · 너무 길지 않은지"만 봐요. 가입 규칙(2~20자)이 바뀌기 전 가입자도 찾을 수 있게요.
+ */
+export const findIdSchema = z.object({
+  nickname: z
+    .string()
+    .trim()
+    .min(1, "닉네임을 입력해 주세요")
+    .max(80, "닉네임은 80자까지 쓸 수 있어요"),
+});
+
+/** 비밀번호 재설정 보안키 (메일로 받은 긴 글자) — 강사님 API 규칙: 16~128자 */
+export const resetTokenField = z
+  .string()
+  .trim()
+  .min(1, "보안키를 입력해 주세요")
+  .min(16, "보안키를 끝까지 입력했는지 확인해 주세요")
+  .max(128, "보안키를 끝까지 입력했는지 확인해 주세요");
+
+/** 비밀번호 다시 만들기 폼 — 이메일 · 보안키 · 새 비밀번호 · 확인 */
+export const passwordResetSchema = z
+  .object({
+    email: emailField,
+    token: resetTokenField,
+    ...passwordPair.shape,
+  })
+  .refine((values) => values.password === values.passwordConfirm, {
+    path: ["passwordConfirm"],
+    message: "비밀번호가 서로 달라요",
+    // 가입 폼과 같아요: 비밀번호 두 칸만 올바르면 다른 칸이 틀려도 바로 비교
+    when: (payload) => passwordPair.safeParse(payload.value).success,
+  });
+
 export type LoginValues = z.infer<typeof loginSchema>;
+export type PasswordResetValues = z.infer<typeof passwordResetSchema>;
+export type FindIdValues = z.infer<typeof findIdSchema>;
 export type SignupValues = z.infer<typeof signupSchema>;

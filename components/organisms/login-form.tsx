@@ -32,10 +32,11 @@ type LoginFormProps = {
 export function LoginForm({ callbackUrl, notice }: LoginFormProps) {
   const router = useRouter();
   const passwordRef = useRef<HTMLInputElement>(null);
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof LoginValues, string>>
-  >({});
-  const [formError, setFormError] = useState<string | null>(null);
+  // 칸 아래 문구(fields)와 버튼 위 실패 문구(form)는 늘 같이 바뀌어서 상태 하나로 들고 있어요
+  const [result, setResult] = useState<{
+    fields?: Partial<Record<keyof LoginValues, string>>;
+    form?: string;
+  }>({});
   const [isPending, startTransition] = useTransition();
   // 안내(로그아웃했어요 등)는 잠깐만: 글자 입력 · 제출 · 5초 뒤 사라지고, 새로고침해도 안 보여요
   const [noticeVisible, hideNotice] = useFlashNotice(Boolean(notice));
@@ -51,17 +52,16 @@ export function LoginForm({ callbackUrl, notice }: LoginFormProps) {
       password: formData.get("password"),
     });
     if (!parsed.success) {
-      setErrors(fieldErrors(parsed.error));
-      setFormError(null);
+      setResult({ fields: fieldErrors(parsed.error) });
       return;
     }
-    setErrors({});
+    setResult({});
 
     // 2. 로그인 요청 — 기다리는 동안 isPending = true (버튼 잠김)
     startTransition(async () => {
-      const result = await requestLogin(parsed.data);
-      if (!result.ok) {
-        setFormError(result.message);
+      const login = await requestLogin(parsed.data);
+      if (!login.ok) {
+        setResult({ form: login.message });
         if (passwordRef.current) passwordRef.current.value = ""; // 비밀번호만 비우기
         passwordRef.current?.focus();
         return;
@@ -84,7 +84,7 @@ export function LoginForm({ callbackUrl, notice }: LoginFormProps) {
         <FormAlert tone={notice.tone}>{notice.message}</FormAlert>
       )}
 
-      <FormField id="email" label="이메일" error={errors.email}>
+      <FormField id="email" label="이메일" error={result.fields?.email}>
         {(field) => (
           <InputBox
             {...field}
@@ -99,7 +99,7 @@ export function LoginForm({ callbackUrl, notice }: LoginFormProps) {
       <FormField
         id="password"
         label="비밀번호"
-        error={errors.password}
+        error={result.fields?.password}
         labelEnd={
           <Link
             href={routes.forgotPassword}
@@ -120,7 +120,7 @@ export function LoginForm({ callbackUrl, notice }: LoginFormProps) {
       </FormField>
 
       {/* 실패 문구는 피그마 ⑤처럼 버튼 바로 위 */}
-      {formError && <FormAlert tone="error">{formError}</FormAlert>}
+      {result.form && <FormAlert tone="error">{result.form}</FormAlert>}
 
       <SubmitButton
         pending={isPending}

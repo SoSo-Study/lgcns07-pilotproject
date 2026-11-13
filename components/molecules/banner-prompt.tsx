@@ -125,10 +125,12 @@ export function BannerPrompt({
 
   return (
     <>
+      {/* 입력칸은 테두리가 없어서(outline-none), 포커스가 들어오면 명령어 줄 전체에 테두리를 그려요 (#89)
+          배너가 overflow-hidden이라 바깥 테두리는 잘려요 → 안쪽(ring-inset)에 그려요 */}
       <form
         onSubmit={handleSubmit}
         className={cn(
-          "items-center gap-2 bg-card py-2 pr-36 pl-4 font-mono text-sm",
+          "items-center gap-2 bg-card py-2 pr-36 pl-4 font-mono text-sm focus-within:ring-2 focus-within:ring-inset focus-within:ring-ring",
           className,
         )}
         {...props}

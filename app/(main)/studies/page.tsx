@@ -13,18 +13,10 @@ import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { bannerSlides } from "@/config/banner-slides";
 import { routes } from "@/config/routes";
+import { studyCategoryList } from "@/config/study-category";
 import { studiesHref } from "@/lib/studies-href";
 import { cn } from "@/lib/utils";
 import { studyListQuerySchema } from "@/schema/study-list-schema";
-import type { StudyCategory } from "@/types/study";
-
-const categories: StudyCategory[] = [
-  "FRONTEND",
-  "BACKEND",
-  "ALGORITHM",
-  "CS",
-  "INTERVIEW",
-];
 
 const sortOptions = [
   { value: "latest", label: "최신순" },
@@ -76,7 +68,23 @@ async function StudyList({
   const { items: studies, totalPages, openCount, closedCount } = result.data;
   const { categoryCounts } = result.data;
   const currentPage = result.data.page + 1; // API는 0부터, 화면 · 주소는 1부터
+
+  // 검색 · 분야로 걸렀는데 없을 때만 따로 안내 (아니면 표의 기본 문구 "아직 스터디가 없어요")
   const hasFilter = q !== "" || category !== undefined;
+  const filteredEmpty = hasFilter ? (
+    <EmptyState
+      title="검색 결과가 없어요"
+      description="다른 단어로 찾거나 분야를 바꿔 보세요."
+      action={
+        <Link
+          href={routes.studies}
+          className={buttonVariants({ variant: "outline" })}
+        >
+          조건 지우기
+        </Link>
+      }
+    />
+  ) : undefined;
 
   return (
     <div className="flex flex-col gap-4">
@@ -118,7 +126,7 @@ async function StudyList({
           selected={category === undefined}
           count={categoryCounts.ALL}
         />
-        {categories.map((item) => (
+        {studyCategoryList.map((item) => (
           <CategoryChip
             key={item}
             category={item}
@@ -133,22 +141,7 @@ async function StudyList({
         studies={studies}
         openCount={openCount}
         closedCount={closedCount}
-        empty={
-          hasFilter ? (
-            <EmptyState
-              title="검색 결과가 없어요"
-              description="다른 단어로 찾거나 분야를 바꿔 보세요."
-              action={
-                <Link
-                  href={routes.studies}
-                  className={buttonVariants({ variant: "outline" })}
-                >
-                  조건 지우기
-                </Link>
-              }
-            />
-          ) : undefined
-        }
+        empty={filteredEmpty}
       />
 
       <Pagination

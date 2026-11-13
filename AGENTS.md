@@ -13,6 +13,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - 버전: Next.js 16.4 App Router · React 19.3 · Tailwind CSS v4 (설정은 `app/globals.css`의 `@theme`, `tailwind.config.js` 없음) · shadcn (base-nova, `@base-ui/react`) · zod 4 · NextAuth v4 (`getServerSession(authOptions)`) · pnpm · `cacheComponents: true`
 - 옛날 방식 대신: `middleware.ts` → `proxy.ts` · `params.id` → `await params` · `useFormState` → `useActionState` · `npm install` → `pnpm add`
 - 요청 흐름: `page.tsx` → `actions/`("use server") → `service/`(fetch) → 강사님 Spring API. `page.tsx`에서 바로 fetch 금지
+- `app/`에는 Next 파일(`page` · `layout` · `error` · `not-found` · `route` …)만. 부품은 `components/`에 (서버 액션을 부르는 부품은 `organisms/`, 보여 주기만 하는 작은 부품은 `molecules/`) — #71
 - API 응답 모양: `types/api-response.ts`의 `{ success, code, message, data }`
 - 파일 · 폴더 이름은 전부 kebab-case (`study-row.tsx`), 컴포넌트 이름은 PascalCase, 훅은 `hooks/use-*.ts`
 - 화면 주소는 `config/routes.ts`, API 주소는 `config/api-paths.ts`, 분야 색은 `config/study-category.ts`에서 꺼내 쓰기

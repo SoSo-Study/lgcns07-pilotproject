@@ -24,8 +24,12 @@ export function BookmarkButton({
   bookmarkCount,
   isLoggedIn,
 }: BookmarkButtonProps) {
-  const [saved, setSaved] = useState({ bookmarked, bookmarkCount });
-  const [optimistic, setOptimistic] = useOptimistic(saved);
+  // 기준 값은 page가 내려준 props 그대로 — 따로 상태로 복사하지 않아요 (강의 11/2 "불필요한 것까지 상태 관리하지 말아라")
+  // 저장이 끝나면 서버 액션의 revalidatePath로 page가 새 숫자를 다시 내려줘요
+  const [optimistic, setOptimistic] = useOptimistic({
+    bookmarked,
+    bookmarkCount,
+  });
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -51,10 +55,9 @@ export function BookmarkButton({
         bookmarkCount:
           optimistic.bookmarkCount + (optimistic.bookmarked ? -1 : 1),
       });
-      // 2. 서버에 저장 — 성공하면 서버 숫자로, 실패하면 자동으로 원래대로(낙관적 값이 사라짐)
+      // 2. 서버에 저장 — 성공하면 새 props(서버 숫자)로, 실패하면 자동으로 원래대로(낙관적 값이 사라짐)
       const result = await toggleBookmarkAction(studyId);
-      if (result.ok) setSaved(result.data);
-      else setMessage(result.message);
+      if (!result.ok) setMessage(result.message);
     });
   }
 

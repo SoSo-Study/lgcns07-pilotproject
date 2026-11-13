@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Check, Clock, LogIn, Users } from "lucide-react";
-import { ApplyForm } from "./apply-form";
-import { CancelApplyButton } from "./cancel-apply-button";
+import { ApplyForm } from "@/components/organisms/apply-form";
+import { CancelApplyButton } from "@/components/organisms/cancel-apply-button";
 import { Pill } from "@/components/atoms/pill";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { routes } from "@/config/routes";

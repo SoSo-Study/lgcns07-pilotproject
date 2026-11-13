@@ -6,17 +6,19 @@ import type { StudySummary } from "@/types/study";
 
 type StudyTableProps = {
   studies: StudySummary[];
-  openCount?: number; // 머리줄 "모집 중 9" (백엔드 값이 있으면 그걸로)
-  closedCount?: number; // 머리줄 "마감 3"
+  /** 머리줄 "모집 중 9" — 안 주면 받은 목록에서 세요. 쪽이 나뉜 목록은 서버가 준 전체 숫자를 넘겨요 */
+  openCount?: number;
+  /** 머리줄 "마감 3" — 안 주면 받은 목록에서 세요 */
+  closedCount?: number;
   empty?: ReactNode; // 비었을 때 보여 줄 것 (없으면 기본 문구)
 };
 
 // 피그마 ① 스터디 표 — 머리줄 + StudyRow 여러 줄 + 비었을 때 화면
-// 사용: <StudyTable studies={data.studies} openCount={9} closedCount={3} />
+// 사용: <StudyTable studies={studies} /> · 쪽 번호가 있는 목록: <StudyTable studies={studies} openCount={9} closedCount={3} />
 export function StudyTable({
   studies,
-  openCount,
-  closedCount,
+  openCount = studies.filter((study) => study.status === "OPEN").length,
+  closedCount = studies.filter((study) => study.status === "CLOSED").length,
   empty,
 }: StudyTableProps) {
   return (
@@ -25,12 +27,13 @@ export function StudyTable({
         <div className="flex flex-1 items-center gap-4">
           <span className="flex items-center gap-1.5 font-bold text-foreground">
             <CircleDot className="size-4" aria-hidden />
-            모집 중{openCount !== undefined && <Count value={openCount} />}
+            모집 중
+            <Count value={openCount} />
           </span>
           <span className="flex items-center gap-1.5">
             <CircleCheck className="size-4" aria-hidden />
             마감
-            {closedCount !== undefined && <Count value={closedCount} />}
+            <Count value={closedCount} />
           </span>
         </div>
         {/* 칸 이름은 표 모양(1024px 이상)일 때만 */}

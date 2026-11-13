@@ -1,4 +1,4 @@
-// app/(main)/studies/write/form-field.tsx — ③ 모집글 등록 · 수정 폼 (화면: sooahp님 #7)
+// components/organisms/study-write-form.tsx — ③ 모집글 등록 · 수정 폼 (화면: sooahp님 #7)
 // API 연결(#46): 값은 코드 · 숫자로 보내고(#14 팀 결정), 서버 액션이 같은 규칙으로 다시 검사해요(#45 A4)
 "use client";
 
@@ -11,6 +11,7 @@ import {
 import { routes } from "@/config/routes";
 import { studyCategories } from "@/config/study-category";
 import { studyModeLabels } from "@/config/study-mode";
+import { earliestDeadline } from "@/schema/study-write-schema";
 import type { Study, StudyMode } from "@/types/study";
 
 /** 수정할 때 폼을 채울 값 (등록이면 없음) */
@@ -38,72 +39,73 @@ export default function StudyWriteForm({
   initial?: StudyFormInitial;
 }) {
   const router = useRouter();
+  // 상태는 "입력할 때마다 화면이 바뀌는 것"만 — 칩 목록 · 날짜 칸 안내 글 · 글자 수 · 태그 안내 · 저장 결과
+  // (진행 방식은 라디오, 태그 입력칸은 비제어라 상태가 없어요. 화면을 떠나면 page의 ResetOnLeave가 통째로 비워요)
   const [tags, setTags] = useState<string[]>(initial?.techTags ?? []);
-  const [tagInput, setTagInput] = useState("");
-  const [mode, setMode] = useState<StudyMode>(initial?.mode ?? "ONLINE");
   const [deadline, setDeadline] = useState(initial?.deadline ?? "");
   const [dateType, setDateType] = useState<"text" | "date">(
     initial ? "date" : "text",
   );
   const [description, setDescription] = useState(initial?.content ?? "");
-  const [errors, setErrors] = useState<FieldErrors>({});
-  const [formError, setFormError] = useState<string | null>(null);
+  // 칸 문구(errors)와 저장 실패 문구(formError)는 늘 같이 바뀌어서 결과 하나로 들고 있어요
+  const [result, setResult] = useState<StudyWriteResult | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [tagNotice, setTagNotice] = useState<string | null>(null);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const trimmed = tagInput.trim().slice(0, MAX_TAG_LENGTH);
-      // 쉼표는 태그를 이어 붙이는 기호라 빼요. 5개까지만 (서버 규칙과 같게)
-      if (
-        trimmed &&
-        !trimmed.includes(",") &&
-        !tags.includes(trimmed) &&
-        tags.length < MAX_TAGS
-      ) {
-        setTags([...tags, trimmed]);
-        setTagInput("");
-      }
+    if (e.key !== "Enter") return;
+    e.preventDefault(); // Enter로 폼이 제출되는 것 막기
+    if (e.nativeEvent.isComposing) return; // 한글 조합 중 Enter는 무시 (중복 입력 방지)
+
+    // 입력칸 글자는 상태로 들고 있지 않고 Enter 때 칸에서 바로 읽어요
+    const input = e.currentTarget;
+    const trimmed = input.value.trim();
+    if (!trimmed) return;
+
+    // 쉼표는 태그를 이어 붙이는 기호라 빼요. 5개까지만 (서버 규칙과 같게)
+    if (trimmed.includes(",")) {
+      setTagNotice("쉼표(,)는 태그에 넣을 수 없어요.");
+      return;
     }
+    if (tags.includes(trimmed)) {
+      setTagNotice("이미 추가한 태그예요.");
+      return;
+    }
+    if (tags.length >= MAX_TAGS) {
+      setTagNotice(`태그는 최대 ${MAX_TAGS}개까지 추가할 수 있어요.`);
+      return;
+    }
+
+    setTags([...tags, trimmed]);
+    input.value = "";
+    setTagNotice(null);
   };
 
   const removeTag = (tagToRemove: string) => {
     setTags(tags.filter((t) => t !== tagToRemove));
+    setTagNotice(null);
   };
 
-  // 등록 후 폼 비우기: state로 관리하는 값 + defaultValue를 쓰는 칸을 둘 다 되돌려요
-  const resetForm = (form: HTMLFormElement) => {
-    form.reset(); // 제목 · 분야 · 모집 인원 (defaultValue 칸)
-    setTags([]);
-    setTagInput("");
-    setMode("ONLINE");
-    setDeadline("");
-    setDateType("text"); // 마감일을 "날짜 선택" 안내 글이 보이는 상태로
-    setDescription("");
-  };
-
+  // ⚠ <form action> 대신 onSubmit을 써요 — form action은 끝나면 React가 칸을 비워서,
+  //   서버 검사에 걸렸을 때 쓴 제목 · 분야 · 인원이 날아가요
   const onSubmitHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
+    const formData = new FormData(e.currentTarget);
 
     // 서버 액션: 검사 → 강사님 API 저장. 기다리는 동안 버튼이 잠겨요(연타 방지)
     startTransition(async () => {
-      const result = await saveStudyAction(formData);
-      if (!result.ok) {
-        setErrors(result.errors ?? {});
-        setFormError(result.formError ?? null);
-        return;
-      }
-      setErrors({});
-      setFormError(null);
-      if (!initial) resetForm(form); // 등록이면 폼 초기화
+      const saved = await saveStudyAction(formData);
+      setResult(saved);
+      if (!saved.ok) return;
       // 저장한 글의 상세로 (replace: 뒤로 가기로 폼에 다시 오지 않게)
-      router.replace(routes.study(result.studyId));
+      // 폼 비우기는 따로 안 해요 — 화면을 떠나면 page의 ResetOnLeave가 처음 상태로 되돌려요
+      router.replace(routes.study(saved.studyId));
       router.refresh();
     });
   };
 
+  const errors: FieldErrors = result && !result.ok ? (result.errors ?? {}) : {};
+  const formError = result && !result.ok ? result.formError : undefined;
   const errorList = [
     errors?.title,
     errors?.category,
@@ -120,7 +122,6 @@ export default function StudyWriteForm({
       style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
     >
       <input type="hidden" name="techTags" value={tags.join(",")} />
-      <input type="hidden" name="mode" value={mode} />
       {initial && <input type="hidden" name="studyId" value={initial.id} />}
 
       {/* 스터디 제목 */}
@@ -259,6 +260,7 @@ export default function StudyWriteForm({
             name="deadline"
             type={dateType}
             required
+            min={earliestDeadline()} // 달력에서 오늘 · 지난 날짜는 못 골라요 (#97)
             value={deadline}
             placeholder="날짜 선택"
             onChange={(e) => setDeadline(e.target.value)}
@@ -299,7 +301,19 @@ export default function StudyWriteForm({
             marginBottom: "0.5rem",
           }}
         >
-          기술 태그
+          기술 태그 {/* 현재 개수 표시 */}
+          <span
+            style={{
+              fontSize: "0.75rem",
+              fontWeight: "normal",
+              color:
+                tags.length >= MAX_TAGS
+                  ? "var(--color-danger, #ef4444)"
+                  : "var(--text-muted, #6b7280)",
+            }}
+          >
+            {tags.length} / {MAX_TAGS}
+          </span>
         </label>
         <div
           style={{
@@ -329,10 +343,12 @@ export default function StudyWriteForm({
               {tag} ✕
             </span>
           ))}
+          {/* maxLength 추가, onChange에서 안내 지우기 */}
+          {/* 비제어 칸 — name이 없어서 폼과 같이 보내지지 않아요(태그는 위 숨은 칸 techTags로) */}
           <input
             type="text"
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
+            maxLength={MAX_TAG_LENGTH}
+            onChange={() => setTagNotice(null)}
             onKeyDown={handleKeyDown}
             placeholder={tags.length === 0 ? "태그 입력 후 Enter" : ""}
             style={{
@@ -345,6 +361,25 @@ export default function StudyWriteForm({
             }}
           />
         </div>
+        {/* 안내 문구 (소개의 글자 수 안내와 같은 방식) */}
+        <span
+          role="status"
+          aria-live="polite"
+          style={{
+            display: "block",
+            marginTop: "0.25rem",
+            fontSize: "0.75rem",
+            color:
+              tagNotice || tags.length >= MAX_TAGS
+                ? "var(--color-danger, #ef4444)"
+                : "var(--text-muted, #6b7280)",
+          }}
+        >
+          {tagNotice ??
+            (tags.length >= MAX_TAGS
+              ? `최대 ${MAX_TAGS}개까지 추가했어요.`
+              : `Enter로 태그를 추가해요 · 최대 ${MAX_TAGS}개, 태그당 ${MAX_TAG_LENGTH}자`)}
+        </span>
       </div>
 
       {/* 진행 방식 */}
@@ -369,32 +404,23 @@ export default function StudyWriteForm({
             border: "1px solid var(--border-color, #2d3142)",
           }}
         >
-          {(Object.keys(studyModeLabels) as StudyMode[]).map((option) => {
-            const isSelected = mode === option;
-            return (
-              <button
-                key={option}
-                type="button"
-                aria-pressed={isSelected}
-                onClick={() => setMode(option)}
-                style={{
-                  padding: "0.5rem 1rem",
-                  border: "none",
-                  borderRadius: "4px",
-                  backgroundColor: isSelected
-                    ? "var(--bg-btn-active, #2d3142)"
-                    : "transparent",
-                  color: isSelected
-                    ? "var(--text-main, #ffffff)"
-                    : "var(--text-muted, #6b7280)",
-                  fontWeight: isSelected ? "bold" : "normal",
-                  cursor: "pointer",
-                }}
-              >
-                {studyModeLabels[option]}
-              </button>
-            );
-          })}
+          {/* 진행 방식은 라디오 — 고른 값은 FormData가 들고 가서 상태 · 숨은 칸이 필요 없어요.
+              고른 모양은 CSS(has-checked:)가 그려요 (강의: 상태 대신 CSS로) */}
+          {(Object.keys(studyModeLabels) as StudyMode[]).map((option) => (
+            <label
+              key={option}
+              className="cursor-pointer rounded-[4px] px-4 py-2 text-[var(--text-muted,#6b7280)] has-checked:bg-[var(--bg-btn-active,#2d3142)] has-checked:font-bold has-checked:text-[var(--text-main,#ffffff)] has-focus-visible:outline-2 has-focus-visible:outline-ring"
+            >
+              <input
+                type="radio"
+                name="mode"
+                value={option}
+                defaultChecked={option === (initial?.mode ?? "ONLINE")}
+                className="sr-only"
+              />
+              {studyModeLabels[option]}
+            </label>
+          ))}
         </div>
       </div>
 

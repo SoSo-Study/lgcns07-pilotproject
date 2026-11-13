@@ -44,15 +44,10 @@ async function MyStudyList() {
     );
   }
 
-  const studies = result.data.items;
-  const openCount = studies.filter((study) => study.status === "OPEN").length;
-  const closedCount = studies.length - openCount;
-
+  // 모집 중 · 마감 숫자는 표가 받은 목록에서 스스로 세요
   return (
     <StudyTable
-      studies={studies}
-      openCount={openCount}
-      closedCount={closedCount}
+      studies={result.data.items}
       empty={
         <EmptyState
           title="아직 만든 스터디가 없어요"
