@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import {
   CircleDot,
   Clock,
@@ -37,8 +38,11 @@ import { mockStudies } from "@/lib/mock-studies";
 
 // 🧩 부품 모음 (/ui-kit) — 팀원용 견본 화면. 사이드바엔 없고 주소로만 들어와요.
 // 부품을 고르고, 아래 "사용:" 코드를 복사해서 쓰면 돼요.
+// 로컬(pnpm dev)에서만 열려요 — 배포(production 빌드)에서는 404 (#116)
 
 export default function UiKitPage() {
+  if (process.env.NODE_ENV === "production") notFound();
+
   return (
     <section className="flex flex-col gap-10">
       <PageHeader

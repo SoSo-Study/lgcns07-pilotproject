@@ -86,7 +86,7 @@ page.tsx  →  actions/  →  service/  →  강사님 Spring API
 - 크기: 피그마 숫자 ÷ 4 = Tailwind 숫자 (gap 8 → `gap-2`, padding 16 → `p-4`), 모서리 6 → `rounded-md`, 동그라미 → `rounded-full`
 - 글자: 12 · 14 · 16 · 24 → `text-xs` · `text-sm` · `text-base` · `text-2xl`
 - ❌ `bg-[#161b22]`, `p-[13px]` 같은 직접 값 쓰지 않기 · ❌ `` `bg-category-${x}` `` 처럼 클래스 조립하지 않기 (색이 안 나와요)
-- 🧩 **공통 부품 견본: `pnpm dev` → http://localhost:3000/ui-kit** (상태 뱃지 · 기술 태그 · 분야 칩 · 입력칸 · 검색창 · 스터디 표 · 쪽 번호 · 빈 화면 + 사용 코드)
+- 🧩 **공통 부품 견본: `pnpm dev` → http://localhost:3000/ui-kit** (로컬 전용 — 배포 사이트에서는 404, #116) (상태 뱃지 · 기술 태그 · 분야 칩 · 입력칸 · 검색창 · 스터디 표 · 쪽 번호 · 빈 화면 + 사용 코드)
 - 피그마 버튼 → 코드: primary = `<Button>` · default = `<Button variant="outline">` · danger = `<Button variant="destructive">`
 - 견본에 없는 공통 부품이 필요하면 **만들기 전에 팀에 먼저 물어보기**
 
