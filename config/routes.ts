@@ -9,7 +9,7 @@ export const routes = {
   studyWrite: "/studies/write",
   studyEdit: (studyId: number | string) => `/studies/write?studyId=${studyId}`,
   myStudies: "/my-studies",
-  uiKit: "/ui-kit", // 🧩 부품 모음 (팀원용 견본)
+  uiKit: "/ui-kit", // 🧩 부품 모음 (팀원용 견본 · 로컬 전용, 배포에서는 404 #116)
   applicants: "/applicants",
   notifications: "/notifications", // 🔔 알림 (#83)
   profile: "/profile", // ⑧ 내 프로필 (#42) — 탭은 ?tab=applied · mine · password
