@@ -2,7 +2,6 @@
 
 import { useRef, useState, useTransition, type FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { SubmitButton } from "@/components/atoms/submit-button";
 import { FormAlert } from "@/components/molecules/form-alert";
 import { FormField } from "@/components/molecules/form-field";
@@ -30,7 +29,6 @@ type LoginFormProps = {
  * <LoginForm callbackUrl="/studies" notice={getAuthNotice("logged-out")} />
  */
 export function LoginForm({ callbackUrl, notice }: LoginFormProps) {
-  const router = useRouter();
   const passwordRef = useRef<HTMLInputElement>(null);
   // 칸 아래 문구(fields)와 버튼 위 실패 문구(form)는 늘 같이 바뀌어서 상태 하나로 들고 있어요
   const [result, setResult] = useState<{
@@ -66,9 +64,15 @@ export function LoginForm({ callbackUrl, notice }: LoginFormProps) {
         passwordRef.current?.focus();
         return;
       }
-      // 3. 성공 — replace: 뒤로 가기를 눌러도 로그인 화면으로 돌아오지 않게
-      router.replace(callbackUrl);
-      router.refresh(); // 서버 화면을 로그인 상태로 다시 그리기
+      // 3. 성공 — 주소를 새로 불러서 이동해요 (#113)
+      //    router.replace로 화면 안에서 옮기면, 로그인 전에 브라우저가 기억해 둔
+      //    "이 주소는 로그인 화면으로 보내진다"를 그대로 써서 목록으로 튕겨요.
+      //    새로 부르면 그 기억이 전부 버려지고, 모든 화면이 로그인 상태로 다시 그려져요.
+      //    replace: 뒤로 가기를 눌러도 로그인 화면으로 돌아오지 않게
+      //    🔒 callbackUrl은 서버에서 safeCallbackUrl로 검사한 우리 사이트 안 주소예요
+      window.location.replace(callbackUrl);
+      // 새 화면이 뜰 때까지 버튼을 잠근 채로 둬요 (그사이 한 번 더 누르지 못하게)
+      await new Promise(() => {});
     });
   }
 
